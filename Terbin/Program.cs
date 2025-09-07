@@ -1,10 +1,11 @@
 ﻿using Newtonsoft.Json;
 using Terbin;
+using Terbin.Data;
 
 var ctx = new Ctx();
 ctx.manifestPath = Path.Combine(Environment.CurrentDirectory, "manifest.json");
 ctx.existManifest = File.Exists(ctx.manifestPath);
-if (ctx.existManifest) ctx.manifest = JsonConvert.DeserializeObject<Manifest>(File.ReadAllText(ctx.manifestPath));
+if (ctx.existManifest) ctx.manifest = JsonConvert.DeserializeObject<ProjectManifest>(File.ReadAllText(ctx.manifestPath));
 
 ctx.config = new();
 if (File.Exists(ctx.config.configPath))

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Newtonsoft.Json;
 using Terbin;
+using Terbin.Data;
 
 namespace Terbin.Commands;
 
@@ -13,7 +14,7 @@ public class SetupAll : ICommand
     public void Execution(Ctx ctx, string[] args)
     {
         // Pass-through flags (e.g., -y/--yes) to sub-commands/dialogs
-    ctx.Log.Section("Setup: full mod preparation");
+        ctx.Log.Section("Setup: full mod preparation");
 
         // 1. FarlandsPath configuration
         if (ctx.config == null || string.IsNullOrWhiteSpace(ctx.config.FarlandsPath))
@@ -34,8 +35,11 @@ public class SetupAll : ICommand
         }
 
         // 2. Manifest
-    ctx.Log.Info("Step: manifest");
-        new ManifestCommand().Execution(ctx, ["-y"]);
+        ctx.Log.Info("Step: manifest");
+        List<string> manifestArgs = ["-y"];
+        if (args.Contains("empty")) manifestArgs.Add("-x");
+
+        new ManifestCommand().Execution(ctx, manifestArgs.ToArray());
         // Reload manifest into context in case it was just created
         if (!string.IsNullOrWhiteSpace(ctx.manifestPath))
         {
@@ -43,20 +47,21 @@ public class SetupAll : ICommand
             if (ctx.existManifest)
             {
                 var manJson = File.ReadAllText(ctx.manifestPath);
-                ctx.manifest = JsonConvert.DeserializeObject<Manifest>(manJson);
+                ctx.manifest = JsonConvert.DeserializeObject<ProjectManifest>(manJson);
             }
         }
 
         // 3. Gen
-    ctx.Log.Info("Step: gen");
+        ctx.Log.Info("Step: gen");
         new GenerateProject().Execution(ctx, []);
 
         // 4. Inf
-    ctx.Log.Info("Step: inf");
+        ctx.Log.Info("Step: inf");
         new InsertFarlands().Execution(ctx, Array.Empty<string>());
 
         // 5. Bman
-    ctx.Log.Info("Step: bman");
+        ctx.Log.Info("Step: bman");
+
         new BuildManifest().Execution(ctx, []);
 
         ctx.Log.Success("Setup complete. Mod ready!");

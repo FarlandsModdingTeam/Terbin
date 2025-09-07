@@ -2,17 +2,8 @@ using System;
 using Newtonsoft.Json;
 using Terbin.Commands;
 
-namespace Terbin;
+namespace Terbin.Data;
 
-public class Reference
-{
-    [JsonProperty("name")]
-    public string? Name;
-    [JsonProperty("guid")]
-    public string? GUID;
-    [JsonProperty("url")]
-    public string? manifestUrl;
-}
 
 public class Index
 {

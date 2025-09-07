@@ -1,6 +1,8 @@
 using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
+using Terbin.Data;
+using Index = Terbin.Data.Index;
 
 namespace Terbin.Commands;
 
@@ -192,7 +194,7 @@ public class Instances : ICommand
     private static void GenerateInstanceManifest(string dest, string name)
     {
         var manifestPath = Path.Combine(dest, "manifest.json");
-        var instanceManifest = new InstanceManifestLite
+        var instanceManifest = new InstanceManifest
         {
             Name = name,
             Version = "1.0.0",
@@ -200,13 +202,6 @@ public class Instances : ICommand
         };
         var json = JsonConvert.SerializeObject(instanceManifest, Formatting.Indented);
         File.WriteAllText(manifestPath, json);
-    }
-
-    private class InstanceManifestLite
-    {
-        public string? Name { get; set; }
-        public string? Version { get; set; }
-        public List<string>? Mods { get; set; }
     }
     private static bool InstallMod(Ctx ctx, Reference mod, string dest)
     {
@@ -216,7 +211,7 @@ public class Instances : ICommand
         {
             ctx.Log.Info($"Downloading {mod.Name}... :: {tmpZip}");
             var manifesJson = NetUtil.DownloadString(mod.manifestUrl);
-            var manifest = JsonConvert.DeserializeObject<Manifest>(manifesJson);
+            var manifest = JsonConvert.DeserializeObject<ProjectManifest>(manifesJson);
             var url = Path.Combine(manifest.url, $"releases/download/v{manifest.Versions.Last()}/{manifest.Name}.zip");
             NetUtil.DownloadFileWithProgress(url, tmpZip);
             Console.WriteLine("");
@@ -317,21 +312,21 @@ public class Instances : ICommand
 
             // Check if mod is already registered in the instance manifest before installing
             var manifestPath = Path.Combine(instance.Value, "manifest.json");
-            InstanceManifestLite manifest;
+            InstanceManifest manifest;
             try
             {
                 if (File.Exists(manifestPath))
                 {
-                    manifest = JsonConvert.DeserializeObject<InstanceManifestLite>(File.ReadAllText(manifestPath)) ?? new InstanceManifestLite();
+                    manifest = JsonConvert.DeserializeObject<InstanceManifest>(File.ReadAllText(manifestPath)) ?? new InstanceManifest();
                 }
                 else
                 {
-                    manifest = new InstanceManifestLite();
+                    manifest = new InstanceManifest();
                 }
             }
             catch
             {
-                manifest = new InstanceManifestLite();
+                manifest = new InstanceManifest();
             }
             manifest.Mods ??= new List<string>();
             if (manifest.Mods.Contains(modGuid, StringComparer.OrdinalIgnoreCase))
@@ -357,21 +352,21 @@ public class Instances : ICommand
     private static void AddModGuidToManifest(string instanceRoot, string defaultName, string modGuid)
     {
         var manifestPath = Path.Combine(instanceRoot, "manifest.json");
-        InstanceManifestLite manifest;
+        InstanceManifest manifest;
         try
         {
             if (File.Exists(manifestPath))
             {
-                manifest = JsonConvert.DeserializeObject<InstanceManifestLite>(File.ReadAllText(manifestPath)) ?? new InstanceManifestLite();
+                manifest = JsonConvert.DeserializeObject<InstanceManifest>(File.ReadAllText(manifestPath)) ?? new InstanceManifest();
             }
             else
             {
-                manifest = new InstanceManifestLite();
+                manifest = new InstanceManifest();
             }
         }
         catch
         {
-            manifest = new InstanceManifestLite();
+            manifest = new InstanceManifest();
         }
 
         manifest.Name = string.IsNullOrWhiteSpace(manifest.Name) ? defaultName : manifest.Name;

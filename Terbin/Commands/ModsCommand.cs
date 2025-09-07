@@ -1,6 +1,6 @@
 using System;
 using System.Linq;
-
+using Index = Terbin.Data.Index;
 namespace Terbin.Commands;
 
 public class ModsCommand : ICommand

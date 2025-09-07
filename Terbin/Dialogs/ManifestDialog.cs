@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Newtonsoft.Json;
+using Terbin.Data;
 
 namespace Terbin.Dialogs;
 
@@ -9,7 +10,8 @@ public class ManifestDialog
     public void run(Ctx ctx, string[] args)
     {
         var autoYes = args.Any(a => string.Equals(a, "-y", StringComparison.OrdinalIgnoreCase) || string.Equals(a, "--yes", StringComparison.OrdinalIgnoreCase));
-    // Keep prompts lightweight; no section header
+        var empty = args.Any(a => string.Equals(a, "-x", StringComparison.OrdinalIgnoreCase) || string.Equals(a, "--empty", StringComparison.OrdinalIgnoreCase));
+        // Keep prompts lightweight; no section header
 
         string name;
         do
@@ -31,7 +33,7 @@ public class ManifestDialog
                 ctx.Log.Warn("GUID cannot contain spaces. Please try again.");
         } while (string.IsNullOrWhiteSpace(guid) || guid.Contains(" "));
 
-    string version;
+        string version;
         do
         {
             version = ctx.Log.Ask("Initial version: ").Trim();
@@ -58,7 +60,7 @@ public class ManifestDialog
             }
         } while (string.IsNullOrWhiteSpace(url));
 
-        ctx.Log.Box("Project summary", new []
+        ctx.Log.Box("Project summary", new[]
         {
             $"Name    : {name}",
             $"GUID    : {guid}",
@@ -66,22 +68,23 @@ public class ManifestDialog
             $"URL     : {url}"
         });
 
-    if (autoYes || ctx.Log.Confirm("Do you want to create the project?"))
+        if (autoYes || ctx.Log.Confirm("Do you want to create the project?"))
         {
-            var manifest = new Manifest()
+            var manifest = new ProjectManifest()
             {
                 Name = name!,
+                Type = empty ? ProjectManifest.ManifestType.EMPTY : ProjectManifest.ManifestType.NORMAL,
                 GUID = guid!,
                 Versions = new System.Collections.Generic.List<string> { version! },
                 url = url!,
-                Dependencies = ["fm.fcm"]
+                Dependencies = empty ? [] : ["fm.fcm"]
             };
 
             var path = ctx.manifestPath ?? Path.Combine(Environment.CurrentDirectory, "manifest.json");
             File.WriteAllText(path, JsonConvert.SerializeObject(manifest, Formatting.Indented));
             ctx.Log.Success("Project created successfully.");
         }
-    else
+        else
         {
             ctx.Log.Info("Operation cancelled. No project was created.");
         }

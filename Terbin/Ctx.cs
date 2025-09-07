@@ -1,12 +1,13 @@
 using System;
 using System.Runtime.CompilerServices;
+using Terbin.Data;
 
 namespace Terbin;
 
 public class Ctx
 {
     public bool existManifest;
-    public Manifest? manifest;
+    public ProjectManifest? manifest;
     public string? manifestPath;
 
     public Config? config;

@@ -437,3 +437,7 @@
 .vs/Terbin/v17/.suo
 .vs/Terbin/v17/DocumentLayout.backup.json
 .vs/Terbin/v17/DocumentLayout.json
+.vs/Terbin/FileContentIndex/f06b872f-66a3-4fd0-84eb-4b8080d4eba4.vsidx
+TerbinManager/AppShell.xaml.cs
+TerbinManager/MauiProgram.cs
+TerbinManager/TerbinManager.csproj

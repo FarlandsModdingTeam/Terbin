@@ -2,6 +2,7 @@ using Newtonsoft.Json;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using Terbin.Data;
 
 namespace Terbin.Commands;
 
@@ -30,6 +31,12 @@ class BuildManifest : ICommand
         if (string.IsNullOrWhiteSpace(ctx.manifest.GUID))
         {
             ctx.Log.Error("Manifest GUID is missing or empty.");
+            return;
+        }
+
+        if (ctx.manifest.Type == ProjectManifest.ManifestType.EMPTY)
+        {
+            executeEmpty(ctx, ctx.manifest);
             return;
         }
 
@@ -139,6 +146,70 @@ class BuildManifest : ICommand
         }
     }
 
+    private void executeEmpty(Ctx ctx, ProjectManifest manifest)
+    {
+        var pluginInfo = $$"""
+        using BepInEx;
+        using BepInEx.Logging;
+
+        namespace {{manifest.Name}};
+        public class PluginInfo
+        {
+            public const string GUID = "{{manifest.GUID}}"; 
+            public const string Name = "{{manifest.Name}}"; 
+            public const string Version = "{{manifest.Versions.Last()}}";
+        }
+        """;
+
+        var pluginInfoPath = Path.Combine(Environment.CurrentDirectory, "PluginInfo.cs");
+        try
+        {
+            File.WriteAllText(pluginInfoPath, pluginInfo);
+            ctx.Log.Success($"Plugin info generated successfully at: {pluginInfoPath}");
+        }
+        catch (Exception ex)
+        {
+            ctx.Log.Error($"Failed to write plugin file: {ex.Message}");
+            return;
+        }
+        var pluginPath = Path.Combine(Environment.CurrentDirectory, "Plugin.cs");
+
+        if (!File.Exists(pluginPath))
+        {
+            var plugin = $$"""
+                using BepInEx;
+                using BepInEx.Logging;
+
+                namespace {{ctx.manifest.Name}};
+                
+                [BepInPlugin(PluginInfo.GUID, PluginInfo.Name, PluginInfo.Version)]
+                public class Plugin : BaseUnityPlugin
+                {
+                    internal static new ManualLogSource Logger;
+                        
+                    private void Awake()
+                    {
+                        // Plugin startup logic
+                        Logger = base.Logger;
+                        Logger.LogInfo($"Plugin '{{ctx.manifest.GUID}}' is loaded!");
+                    }
+                }
+                """;
+
+            try
+            {
+                File.WriteAllText(pluginPath, plugin);
+                ctx.Log.Success($"Plugin generated successfully at: {pluginPath}");
+            }
+            catch (Exception ex)
+            {
+                ctx.Log.Error($"Failed to write plugin file: {ex.Message}");
+                return;
+            }
+        }
+
+    }
+
     private void downloadLib(Ctx ctx, Reference reference)
     {
         // Validate reference fields
@@ -166,10 +237,10 @@ class BuildManifest : ICommand
             throw new Exception($"Failed to download manifest: {ex.Message}");
         }
 
-        Manifest? manifest;
+        ProjectManifest? manifest;
         try
         {
-            manifest = JsonConvert.DeserializeObject<Manifest>(manifestJson);
+            manifest = JsonConvert.DeserializeObject<ProjectManifest>(manifestJson);
         }
         catch (Exception ex)
         {
