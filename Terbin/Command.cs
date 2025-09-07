@@ -5,6 +5,7 @@ namespace Terbin;
 class CommandList
 {
     private List<ICommand> commands = new();
+    private readonly Dictionary<string, string> aliases = new(StringComparer.OrdinalIgnoreCase);
     public void register(Type t)
     {
         if (typeof(ICommand).IsAssignableFrom(t) && !t.IsAbstract && t.GetConstructor(Type.EmptyTypes) != null)
@@ -19,6 +20,10 @@ class CommandList
 
     public Action<Ctx, string[]> getExecution(string cmd)
     {
+        if (aliases.TryGetValue(cmd, out var canonical))
+        {
+            cmd = canonical;
+        }
         var found = commands.FirstOrDefault(c => c.Name.Equals(cmd, StringComparison.OrdinalIgnoreCase));
         if (found == null)
         {
@@ -40,17 +45,28 @@ class CommandList
 
     public void init()
     {
-    commands = new List<ICommand>();
-    register(typeof(Terbin.Commands.SetupAll));
+        commands = new List<ICommand>();
+        register(typeof(Terbin.Commands.SetupAll));
 
         Assembly.GetExecutingAssembly()
             .GetTypes()
             .Where(t => t.IsAssignableTo(typeof(ICommand)))
             .ToList()
             .ForEach(register);
+
+        // Short aliases (-x) map to canonical command names
+        AddAlias("i", "instances");
+        AddAlias("h", "help");
+        AddAlias("v", "version");
     }
 
     public IEnumerable<ICommand> All => commands;
+
+    public void AddAlias(string alias, string target)
+    {
+        if (string.IsNullOrWhiteSpace(alias) || string.IsNullOrWhiteSpace(target)) return;
+        aliases[alias] = target;
+    }
 }
 
 interface ICommand

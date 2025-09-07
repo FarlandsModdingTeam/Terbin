@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="TerbinUI.Pages.ModsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <Grid Padding="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Mods" Style="{StaticResource TitleTextBlockStyle}"/>
+
+        <GridView Grid.Row="1" x:Name="ModsGrid" IsItemClickEnabled="True" ItemClick="OnModClick" SelectionMode="None">
+            <GridView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <ItemsWrapGrid Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </GridView.ItemsPanel>
+            <GridView.ItemTemplate>
+                <DataTemplate>
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Padding="12" Margin="6" CornerRadius="8">
+                        <StackPanel Spacing="4" Width="200">
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="WrapWholeWords"/>
+                            <TextBlock Text="{Binding Guid}" Opacity="0.6" FontSize="12"/>
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </GridView.ItemTemplate>
+        </GridView>
+    </Grid>
+</Page>

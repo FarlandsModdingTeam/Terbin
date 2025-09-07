@@ -20,7 +20,7 @@ public class Help : ICommand
 
         if (args.Length == 0)
         {
-            ctx.Log.Section("Terbin help");
+            ctx.Log.Section("Help");
             ctx.Log.Info("Usage:");
             ctx.Log.Info("  terbin <command> [args]");
             ctx.Log.Info("  terbin help [command]");
@@ -30,6 +30,8 @@ public class Help : ICommand
             {
                 ctx.Log.Info($"  {c.Name} - {c.Description}");
             }
+            ctx.Log.Info("");
+            ctx.Log.Info("Short aliases: e.g. 'terbin -i' for 'terbin instances', 'terbin -h' for help.");
             return;
         }
 
@@ -42,10 +44,10 @@ public class Help : ICommand
             return;
         }
 
-        ctx.Log.Section($"Help: {cmd.Name}");
+    ctx.Log.Section($"Help: {cmd.Name}");
         ctx.Log.Info(cmd.Description);
         ctx.Log.Info("Usage:");
-        ctx.Log.Info($"  terbin {cmd.Name} [args]");
+    ctx.Log.Info($"  terbin {cmd.Name} [args]");
         ctx.Log.Info("Notes: Some commands print usage hints when called without the required arguments.");
     }
 }

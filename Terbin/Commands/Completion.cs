@@ -13,7 +13,7 @@ public class Completion : ICommand
 
     public void Execution(Ctx ctx, string[] args)
     {
-        ctx.Log.Section("Completion");
+    ctx.Log.Info("Completion setup");
 
         // Discover all command names via reflection
         var commands = Assembly.GetExecutingAssembly()

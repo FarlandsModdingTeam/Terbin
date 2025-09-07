@@ -37,7 +37,7 @@ public class Logger
 
     private static string Prefix(LogLevel level) => level switch
     {
-        LogLevel.Info => "[INFO]",
+        LogLevel.Info => "",
         LogLevel.Success => "[OK]  ",
         LogLevel.Warning => "[WARN]",
         LogLevel.Error => "[ERR ]",
@@ -79,10 +79,9 @@ public class Logger
     {
         lock (_lock)
         {
-            var bar = new string('=', Math.Min(Math.Max(title.Length, 10), 30));
-            WithColor(ConsoleColor.Cyan, () => Console.WriteLine($"\n{bar}"));
-            WithColor(ConsoleColor.Cyan, () => Console.WriteLine(title));
-            WithColor(ConsoleColor.Cyan, () => Console.WriteLine($"{bar}\n"));
+            var trimmed = title?.Trim() ?? string.Empty;
+            var header = $"== {trimmed} ==";
+            WithColor(ConsoleColor.Cyan, () => Console.WriteLine(header));
         }
     }
 

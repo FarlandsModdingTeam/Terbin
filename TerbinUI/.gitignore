@@ -1,0 +1,58 @@
+# Archivos de compilación
+bin/
+obj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]og/
+[Ll]ogs/
+
+# Archivos de usuario de Visual Studio
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Configuración local
+*.vs/
+.vscode/
+.idea/
+
+# Archivos de dependencias
+*.nupkg
+*.snupkg
+*.nuspec
+packages/
+*.deps.json
+
+# Archivos generados
+*.dll
+*.exe
+*.pdb
+*.cache
+*.config
+*.dbmdl
+*.bak
+*.log
+
+# Archivos de test y cobertura
+TestResult*/
+[Ll]ogs/
+*.coverage
+*.coveragexml
+
+# Archivos de sistema
+[Tt]humbs.db
+[Dd]esktop.ini
+*.DS_Store
+
+# Archivos de publicación
+publish/
+*.Publish.xml
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# Rider (JetBrains)
+.idea/
+*.iml

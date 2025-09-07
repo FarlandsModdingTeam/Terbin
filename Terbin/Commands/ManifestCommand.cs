@@ -12,7 +12,7 @@ class ManifestCommand : ICommand
 
     public void Execution(Ctx ctx, string[] args)
     {
-        ctx.Log.Section("Manifest command");
+    // No heavy section needed here
 
         if (File.Exists(ctx.manifestPath))
         {

@@ -12,7 +12,7 @@ public class Version : ICommand
 
     public void Execution(Ctx ctx, string[] args)
     {
-        ctx.Log.Section("Version");
+    ctx.Log.Info("Version");
 
         if (ctx.manifest == null || string.IsNullOrWhiteSpace(ctx.manifestPath) || !File.Exists(ctx.manifestPath))
         {

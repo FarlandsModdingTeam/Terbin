@@ -10,7 +10,7 @@ public class Build : ICommand
 
     public void Execution(Ctx ctx, string[] args)
     {
-        ctx.Log.Section("Build");
+    ctx.Log.Info("Build started...");
 
         // 1) Generate plugin.cs from manifest
         new BuildManifest().Execution(ctx, Array.Empty<string>());

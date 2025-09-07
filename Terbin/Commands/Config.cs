@@ -10,7 +10,7 @@ public class Config : ICommand
     {
         if (args.Length < 1)
         {
-            ctx.Log.Warn("[Config] Not enough arguments. Usage: config <module> [value]");
+            ctx.Log.Warn("Not enough arguments. Usage: config <module> [value]");
             return;
         }
 
@@ -18,7 +18,7 @@ public class Config : ICommand
 
         if (ctx.config == null)
         {
-            ctx.Log.Error("[Config] No config loaded. Please initialize configuration first.");
+            ctx.Log.Error("No config loaded. Please initialize configuration first.");
             return;
         }
 
@@ -30,7 +30,7 @@ public class Config : ICommand
                 var input = ctx.Log.Ask("Enter Farlands path: ").Trim();
                 if (string.IsNullOrWhiteSpace(input))
                 {
-                    ctx.Log.Warn("[Config] No path provided. Aborting.");
+                    ctx.Log.Warn("No path provided. Aborting.");
                     return;
                 }
                 ctx.config.FarlandsPath = input;
@@ -39,7 +39,7 @@ public class Config : ICommand
             {
                 ctx.config.FarlandsPath = args[1];
             }
-            ctx.Log.Success($"[Config] Farlands path set to: {ctx.config.FarlandsPath}");
+            ctx.Log.Success($"Farlands path set to: {ctx.config.FarlandsPath}");
         }
     }
 }

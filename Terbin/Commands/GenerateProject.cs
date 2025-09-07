@@ -10,7 +10,8 @@ class GenerateProject : ICommand
 
     public void Execution(Ctx ctx, string[] args)
     {
-    ctx.Log.Section("Project generation");
+    // lightweight log; section header not needed
+    ctx.Log.Info("Generating project...");
 
     if (ctx.manifest == null)
     {

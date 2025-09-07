@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="TerbinUI.Pages.AjustesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <ScrollViewer>
+        <StackPanel Spacing="24" Padding="16">
+            <!-- TERBIN CONFIG -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="Configuraci&#xF3;n de Terbin" Style="{StaticResource TitleTextBlockStyle}"/>
+                <TextBlock Text="Ruta de Farlands" Opacity="0.7"/>
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="TbFarlandsPath" Grid.Column="0" PlaceholderText="Selecciona la carpeta de Farlands..."/>
+                    <Button Grid.Column="1" Content="Examinar" Click="OnBrowseFarlandsPath_Click"/>
+                    <Button Grid.Column="2" Content="Abrir" Click="OnOpenFarlandsPath_Click"/>
+                </Grid>
+            </StackPanel>
+
+            <!-- separator -->
+            <Border Height="1" Background="{ThemeResource DividerStrokeColorDefault}" Opacity="0.6"/>
+
+            <!-- TERBINUI CONFIG -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="Configuraci&#xF3;n de TerbinUI" Style="{StaticResource TitleTextBlockStyle}"/>
+                <TextBlock Text="Ruta de instalaciones" Opacity="0.7"/>
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="TbInstallationsPath" Grid.Column="0" PlaceholderText="Selecciona la carpeta de instalaciones..."/>
+                    <Button Grid.Column="1" Content="Examinar" Click="OnBrowseInstallationsPath_Click"/>
+                    <Button Grid.Column="2" Content="Abrir" Click="OnOpenInstallationsPath_Click"/>
+                </Grid>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

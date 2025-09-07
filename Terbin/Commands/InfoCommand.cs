@@ -10,7 +10,7 @@ public class InfoCommand : ICommand
 
     public void Execution(Ctx ctx, string[] args)
     {
-        ctx.Log.Section("Terbin information");
+    ctx.Log.Section("Info");
     ctx.Log.Info($"Version: undefined");
         ctx.Log.Info($"Manifest path: {ctx.manifestPath}");
         ctx.Log.Info($"Manifest exists?: {(ctx.existManifest ? "Yes" : "No")}");

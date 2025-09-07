@@ -10,6 +10,7 @@ public class Ctx
     public string? manifestPath;
 
     public Config? config;
+    
 
     public Logger Log { get; } = new Logger();
 }

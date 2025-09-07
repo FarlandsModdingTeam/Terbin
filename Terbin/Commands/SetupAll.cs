@@ -13,12 +13,12 @@ public class SetupAll : ICommand
     public void Execution(Ctx ctx, string[] args)
     {
         // Pass-through flags (e.g., -y/--yes) to sub-commands/dialogs
-        ctx.Log.Section("Setup: full mod preparation");
+    ctx.Log.Section("Setup: full mod preparation");
 
         // 1. FarlandsPath configuration
         if (ctx.config == null || string.IsNullOrWhiteSpace(ctx.config.FarlandsPath))
         {
-            ctx.Log.Section("Step: config fpath");
+            ctx.Log.Info("Step: config fpath");
             new Config().Execution(ctx, new[] { "fpath" });
             // Reload config from disk to ensure the latest values are in context
             if (ctx.config != null && File.Exists(ctx.config.configPath))
@@ -34,7 +34,7 @@ public class SetupAll : ICommand
         }
 
         // 2. Manifest
-        ctx.Log.Section("Step: manifest");
+    ctx.Log.Info("Step: manifest");
         new ManifestCommand().Execution(ctx, ["-y"]);
         // Reload manifest into context in case it was just created
         if (!string.IsNullOrWhiteSpace(ctx.manifestPath))
@@ -48,15 +48,15 @@ public class SetupAll : ICommand
         }
 
         // 3. Gen
-        ctx.Log.Section("Step: gen");
+    ctx.Log.Info("Step: gen");
         new GenerateProject().Execution(ctx, []);
 
         // 4. Inf
-        ctx.Log.Section("Step: inf");
+    ctx.Log.Info("Step: inf");
         new InsertFarlands().Execution(ctx, Array.Empty<string>());
 
         // 5. Bman
-        ctx.Log.Section("Step: bman");
+    ctx.Log.Info("Step: bman");
         new BuildManifest().Execution(ctx, []);
 
         ctx.Log.Success("Setup complete. Mod ready!");

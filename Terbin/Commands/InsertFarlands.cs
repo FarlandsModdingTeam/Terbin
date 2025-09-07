@@ -12,13 +12,13 @@ public class InsertFarlands : ICommand
     {
         if (ctx.config == null)
         {
-            ctx.Log.Error("[InsertFarlands] No config loaded. Please initialize configuration first.");
+            ctx.Log.Error("No config loaded. Please initialize configuration first.");
             return;
         }
 
     if (string.IsNullOrWhiteSpace(ctx.config.FarlandsPath))
     {
-        ctx.Log.Error("[InsertFarlands] Farlands path is not configured. Use: config fpath <path>");
+        ctx.Log.Error("Farlands path is not configured. Use: config fpath <path>");
         return;
     }
 
@@ -28,7 +28,7 @@ public class InsertFarlands : ICommand
 
         if (!Directory.Exists(managedPath))
         {
-            ctx.Log.Error($"[InsertFarlands] Managed folder not found: {managedPath}");
+            ctx.Log.Error($"Managed folder not found: {managedPath}");
             return;
         }
 
@@ -47,6 +47,6 @@ public class InsertFarlands : ICommand
             File.Copy(dll, destFile, true);
             copied++;
         }
-        ctx.Log.Success($"[InsertFarlands] Copied {copied} DLLs from Managed to libs (excluding System.*).");
+    ctx.Log.Success($"Copied {copied} DLLs from Managed to libs (excluding System.*).");
     }
 }

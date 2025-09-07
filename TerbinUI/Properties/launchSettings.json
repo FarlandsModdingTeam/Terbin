@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "TerbinUI (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "TerbinUI (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

@@ -6,8 +6,11 @@ namespace Terbin;
 public class Config
 {
     [JsonIgnore]
-    public string configPath = Path.Combine(Environment.CurrentDirectory, ".terbin");
+    public string configPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".terbin");
     private string? farlandsPath;
+    // Map of instance name -> path
+    public Dictionary<string, string> Instances { get; set; } = new();
+    public Index? index = null;
     public string? FarlandsPath
     {
         get => farlandsPath;

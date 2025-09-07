@@ -9,7 +9,7 @@ public class ManifestDialog
     public void run(Ctx ctx, string[] args)
     {
         var autoYes = args.Any(a => string.Equals(a, "-y", StringComparison.OrdinalIgnoreCase) || string.Equals(a, "--yes", StringComparison.OrdinalIgnoreCase));
-        ctx.Log.Section("Project creation");
+    // Keep prompts lightweight; no section header
 
         string name;
         do
