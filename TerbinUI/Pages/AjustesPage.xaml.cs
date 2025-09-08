@@ -6,6 +6,8 @@ using Microsoft.UI.Xaml.Controls;
 using Windows.Storage.Pickers;
 using WinRT.Interop;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Microsoft.UI.Xaml.Input;
 
 namespace TerbinUI.Pages;
 
@@ -23,7 +25,7 @@ public sealed partial class AjustesPage : Page
     }
 
     private static string UiConfigPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".terbinui.json");
-    private static string TerbinConfigPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".terbin");
+    private static string TerbinConfigPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".terbin", "config.json");
 
     public AjustesPage()
     {
@@ -70,19 +72,40 @@ public sealed partial class AjustesPage : Page
         try
         {
             var path = TbFarlandsPath.Text?.Trim();
-            TerbinLiteConfig cfg;
+
+            // Ensure directory exists
+            var dir = Path.GetDirectoryName(TerbinConfigPath);
+            if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+
+            JObject root;
             if (File.Exists(TerbinConfigPath))
             {
-                var json = await File.ReadAllTextAsync(TerbinConfigPath);
-                cfg = JsonConvert.DeserializeObject<TerbinLiteConfig>(json) ?? new TerbinLiteConfig();
+                try
+                {
+                    var current = await File.ReadAllTextAsync(TerbinConfigPath);
+                    root = string.IsNullOrWhiteSpace(current) ? new JObject() : JObject.Parse(current);
+                }
+                catch
+                {
+                    root = new JObject();
+                }
             }
             else
             {
-                cfg = new TerbinLiteConfig();
+                root = new JObject();
             }
 
-            cfg.FarlandsPath = path;
-            var outJson = JsonConvert.SerializeObject(cfg, Formatting.Indented);
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                // remove FarlandsPath if empty
+                root.Remove("FarlandsPath");
+            }
+            else
+            {
+                root["FarlandsPath"] = path;
+            }
+
+            var outJson = root.ToString(Formatting.Indented);
             await File.WriteAllTextAsync(TerbinConfigPath, outJson);
         }
         catch { /* ignore */ }
@@ -104,6 +127,19 @@ public sealed partial class AjustesPage : Page
         if (!string.IsNullOrWhiteSpace(p) && Directory.Exists(p))
         {
             try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", p) { UseShellExecute = true }); } catch { }
+        }
+    }
+
+    private async void OnFarlandsPath_LostFocus(object sender, RoutedEventArgs e)
+    {
+        await SaveTerbinConfigFarlandsPathAsync();
+    }
+
+    private async void OnFarlandsPath_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == Windows.System.VirtualKey.Enter)
+        {
+            await SaveTerbinConfigFarlandsPathAsync();
         }
     }
 

@@ -19,7 +19,7 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBox x:Name="TbFarlandsPath" Grid.Column="0" PlaceholderText="Selecciona la carpeta de Farlands..."/>
+                    <TextBox x:Name="TbFarlandsPath" Grid.Column="0" PlaceholderText="Selecciona la carpeta de Farlands..." LostFocus="OnFarlandsPath_LostFocus" KeyDown="OnFarlandsPath_KeyDown"/>
                     <Button Grid.Column="1" Content="Examinar" Click="OnBrowseFarlandsPath_Click"/>
                     <Button Grid.Column="2" Content="Abrir" Click="OnOpenFarlandsPath_Click"/>
                 </Grid>

@@ -8,29 +8,31 @@ using Newtonsoft.Json;
 using System.Diagnostics;
 using System.IO;
 using Microsoft.UI.Xaml.Media.Animation;
+using System.Collections.Generic;
 
 namespace TerbinUI.Pages;
 
 public sealed partial class ModInfoPage : Page
 {
-    private class UiTerbinIndexRef
+    private class UiReference
     {
         public string? name { get; set; }
         public string? guid { get; set; }
         public string? url { get; set; }
     }
+
     private class UiManifest
     {
         public string? Name { get; set; }
         public string? GUID { get; set; }
-        public System.Collections.Generic.List<string>? Versions { get; set; }
+        public List<string>? Versions { get; set; }
         public string? url { get; set; }
-        public System.Collections.Generic.List<string>? Dependencies { get; set; }
+        public List<string>? Dependencies { get; set; }
     }
-    private class UiIndex { public System.Collections.Generic.List<UiTerbinIndexRef>? references { get; set; } }
-    private class UiConfig { public UiIndex? index { get; set; } }
 
-    private static string TerbinConfigPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".terbin");
+    private static string UserDir => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+    private static string WebIndexPath => Path.Combine(UserDir, ".terbin", "web.index");
+    private static string LocalIndexPath => Path.Combine(UserDir, ".terbin", "local.index");
 
     private string ModId = string.Empty;
     private string ModName = string.Empty;
@@ -57,27 +59,26 @@ public sealed partial class ModInfoPage : Page
         TxtGuid.Text = ModId;
         try
         {
-            // Ensure index and get manifest URL
             await EnsureIndexAsync();
-            var idx = await ReadIndexAsync();
-            var match = idx?.references?.FirstOrDefault(r => string.Equals(r.guid, ModId, StringComparison.OrdinalIgnoreCase) || string.Equals(r.name, ModId, StringComparison.OrdinalIgnoreCase));
-            if (match == null || string.IsNullOrWhiteSpace(match.url))
+
+            string? manifestUrl = await FindManifestUrlAsync(ModId);
+            if (string.IsNullOrWhiteSpace(manifestUrl))
             {
-                TxtUrl.Text = "(URL de manifest no encontrada en el índice)";
+                TxtUrl.Text = "(URL de manifest no encontrada en los índices)";
                 TxtNoDeps.Visibility = Visibility.Visible;
                 return;
             }
 
-            TxtUrl.Text = match.url;
+            TxtUrl.Text = manifestUrl;
 
             // Download manifest
-            string json = await DownloadStringAsync(match.url);
+            string json = await DownloadStringAsync(manifestUrl);
             var man = JsonConvert.DeserializeObject<UiManifest>(json);
             if (man != null)
             {
                 var latest = man.Versions != null && man.Versions.Count > 0 ? man.Versions[^1] : "-";
                 TxtLatest.Text = latest;
-                DepsList.ItemsSource = man.Dependencies ?? new System.Collections.Generic.List<string>();
+                DepsList.ItemsSource = man.Dependencies ?? new List<string>();
                 TxtNoDeps.Visibility = (man.Dependencies == null || man.Dependencies.Count == 0) ? Visibility.Visible : Visibility.Collapsed;
             }
             else
@@ -120,14 +121,27 @@ public sealed partial class ModInfoPage : Page
         catch { }
     }
 
-    private static async Task<UiIndex?> ReadIndexAsync()
+    private static async Task<string?> FindManifestUrlAsync(string id)
     {
         try
         {
-            if (!File.Exists(TerbinConfigPath)) return null;
-            var json = await File.ReadAllTextAsync(TerbinConfigPath, Encoding.UTF8);
-            var cfg = JsonConvert.DeserializeObject<UiConfig>(json);
-            return cfg?.index;
+            // Search in local first, then web
+            var localUrl = await FindInIndexAsync(LocalIndexPath, id);
+            if (!string.IsNullOrWhiteSpace(localUrl)) return localUrl;
+            return await FindInIndexAsync(WebIndexPath, id);
+        }
+        catch { return null; }
+    }
+
+    private static async Task<string?> FindInIndexAsync(string path, string id)
+    {
+        try
+        {
+            if (!File.Exists(path)) return null;
+            var json = await File.ReadAllTextAsync(path, Encoding.UTF8);
+            var list = JsonConvert.DeserializeObject<List<UiReference>>(json) ?? new();
+            var hit = list.FirstOrDefault(r => string.Equals(r.guid, id, StringComparison.OrdinalIgnoreCase) || string.Equals(r.name, id, StringComparison.OrdinalIgnoreCase));
+            return hit?.url;
         }
         catch { return null; }
     }
@@ -140,14 +154,12 @@ public sealed partial class ModInfoPage : Page
 
     private void OnGoBackToListClick(object sender, RoutedEventArgs e)
     {
-        // Preferir volver por la pila de navegación para respetar el origen (Instancia o Mods)
         if (Frame?.CanGoBack == true)
         {
             Frame.GoBack();
             return;
         }
 
-        // Fallback: navegar a la lista de mods si no hay historial
         var frame = this.Frame;
         while (frame?.Parent is Frame parent)
         {

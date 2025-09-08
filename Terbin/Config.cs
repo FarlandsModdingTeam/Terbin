@@ -8,7 +8,7 @@ namespace Terbin;
 public class Config
 {
     [JsonIgnore]
-    public string configPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".terbin");
+    public string configPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".terbin/config.json");
     private string? farlandsPath;
     // Map of instance name -> path
     public Dictionary<string, string> Instances { get; set; } = new();

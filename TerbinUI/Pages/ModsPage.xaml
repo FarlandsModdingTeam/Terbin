@@ -6,30 +6,55 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
-    <Grid Padding="16">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <ScrollViewer>
+        <Grid Padding="16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-        <TextBlock Text="Mods" Style="{StaticResource TitleTextBlockStyle}"/>
+            <TextBlock Text="Mods" Style="{StaticResource TitleTextBlockStyle}"/>
 
-        <GridView Grid.Row="1" x:Name="ModsGrid" IsItemClickEnabled="True" ItemClick="OnModClick" SelectionMode="None">
-            <GridView.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <ItemsWrapGrid Orientation="Horizontal" />
-                </ItemsPanelTemplate>
-            </GridView.ItemsPanel>
-            <GridView.ItemTemplate>
-                <DataTemplate>
-                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Padding="12" Margin="6" CornerRadius="8">
-                        <StackPanel Spacing="4" Width="200">
-                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="WrapWholeWords"/>
-                            <TextBlock Text="{Binding Guid}" Opacity="0.6" FontSize="12"/>
-                        </StackPanel>
-                    </Border>
-                </DataTemplate>
-            </GridView.ItemTemplate>
-        </GridView>
-    </Grid>
+            <StackPanel Grid.Row="1" Spacing="12">
+                <TextBlock Text="Web (Online)" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                <GridView x:Name="WebModsGrid" IsItemClickEnabled="True" ItemClick="OnModClick" SelectionMode="None">
+                    <GridView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <ItemsWrapGrid Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </GridView.ItemsPanel>
+                    <GridView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Padding="12" Margin="6" CornerRadius="8">
+                                <StackPanel Spacing="4" Width="200">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="WrapWholeWords"/>
+                                    <TextBlock Text="{Binding Guid}" Opacity="0.6" FontSize="12"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </GridView.ItemTemplate>
+                </GridView>
+
+                <TextBlock Text="Local" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,16,0,0"/>
+                <GridView x:Name="LocalModsGrid" IsItemClickEnabled="True" ItemClick="OnModClick" SelectionMode="None">
+                    <GridView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <ItemsWrapGrid Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </GridView.ItemsPanel>
+                    <GridView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Padding="12" Margin="6" CornerRadius="8">
+                                <StackPanel Spacing="4" Width="200">
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="WrapWholeWords"/>
+                                    <TextBlock Text="{Binding Guid}" Opacity="0.6" FontSize="12"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </GridView.ItemTemplate>
+                </GridView>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
 </Page>

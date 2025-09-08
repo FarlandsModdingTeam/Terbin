@@ -14,16 +14,16 @@ namespace TerbinUI.Pages;
 
 public sealed partial class ModsPage : Page
 {
-    private class UiTerbinIndexRef
+    private class UiReference
     {
         public string? name { get; set; }
         public string? guid { get; set; }
         public string? url { get; set; }
     }
-    private class UiIndex { public List<UiTerbinIndexRef>? references { get; set; } }
-    private class UiConfig { public UiIndex? index { get; set; } }
 
-    private static string TerbinConfigPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".terbin");
+    private static string UserDir => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+    private static string WebIndexPath => Path.Combine(UserDir, ".terbin", "web.index");
+    private static string LocalIndexPath => Path.Combine(UserDir, ".terbin", "local.index");
 
     public class ModItem
     {
@@ -31,7 +31,8 @@ public sealed partial class ModsPage : Page
         public string Guid { get; set; } = string.Empty;
     }
 
-    public List<ModItem> Mods { get; } = new();
+    public List<ModItem> WebMods { get; } = new();
+    public List<ModItem> LocalMods { get; } = new();
 
     public ModsPage()
     {
@@ -65,26 +66,42 @@ public sealed partial class ModsPage : Page
         catch { }
     }
 
+    private static List<ModItem> MapRefs(IEnumerable<UiReference> refsEnum)
+        => refsEnum
+            .OrderBy(r => r.name ?? string.Empty, StringComparer.OrdinalIgnoreCase)
+            .Select(r => new ModItem { Name = r.name ?? r.guid ?? "(sin nombre)", Guid = r.guid ?? string.Empty })
+            .ToList();
+
     private async Task LoadAsync()
     {
         await EnsureIndexAsync();
-        Mods.Clear();
+        WebMods.Clear();
+        LocalMods.Clear();
 
         try
         {
-            if (!File.Exists(TerbinConfigPath)) return;
-            var json = await File.ReadAllTextAsync(TerbinConfigPath, Encoding.UTF8);
-            var cfg = JsonConvert.DeserializeObject<UiConfig>(json);
-            var refs = cfg?.index?.references ?? new List<UiTerbinIndexRef>();
-            Mods.AddRange(refs
-                .OrderBy(r => r.name ?? string.Empty, StringComparer.OrdinalIgnoreCase)
-                .Select(r => new ModItem { Name = r.name ?? r.guid ?? "(sin nombre)", Guid = r.guid ?? string.Empty }));
-            ModsGrid.ItemsSource = Mods;
+            if (File.Exists(WebIndexPath))
+            {
+                var wjson = await File.ReadAllTextAsync(WebIndexPath, Encoding.UTF8);
+                var wrefs = JsonConvert.DeserializeObject<List<UiReference>>(wjson) ?? new();
+                WebMods.AddRange(MapRefs(wrefs));
+            }
         }
-        catch
+        catch { }
+
+        try
         {
-            ModsGrid.ItemsSource = Array.Empty<ModItem>();
+            if (File.Exists(LocalIndexPath))
+            {
+                var ljson = await File.ReadAllTextAsync(LocalIndexPath, Encoding.UTF8);
+                var lrefs = JsonConvert.DeserializeObject<List<UiReference>>(ljson) ?? new();
+                LocalMods.AddRange(MapRefs(lrefs));
+            }
         }
+        catch { }
+
+        WebModsGrid.ItemsSource = WebMods;
+        LocalModsGrid.ItemsSource = LocalMods;
     }
 
     private void OnModClick(object sender, ItemClickEventArgs e)

@@ -29,27 +29,22 @@ public sealed partial class InstanciaInfoPage : Page
 
     private class SelectableMod
     {
-        public UiTerbinIndexRef Ref { get; set; } = new UiTerbinIndexRef();
+        public UiReference Ref { get; set; } = new UiReference();
         public string Display { get; set; } = string.Empty;
         public override string ToString() => Display;
     }
 
-    // Mirror types for reading terbin config index
-    private class UiTerbinIndexRef
+    private class UiReference
     {
         public string? name { get; set; }
         public string? guid { get; set; }
         public string? url { get; set; }
         public override string ToString() => string.IsNullOrWhiteSpace(name) ? (guid ?? string.Empty) : ($"{name} [{guid}]");
     }
-    private class UiTerbinIndex
-    {
-        public List<UiTerbinIndexRef>? references { get; set; }
-    }
-    private class UiTerbinConfig
-    {
-        public UiTerbinIndex? index { get; set; }
-    }
+
+    private static string UserDir => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+    private static string WebIndexPath => Path.Combine(UserDir, ".terbin", "web.index");
+    private static string LocalIndexPath => Path.Combine(UserDir, ".terbin", "local.index");
 
     public string InstanceName { get; private set; } = string.Empty;
     public string InstancePath { get; private set; } = string.Empty;
@@ -84,7 +79,7 @@ public sealed partial class InstanciaInfoPage : Page
                 var man = JsonConvert.DeserializeObject<InstanceManifest>(json) ?? new InstanceManifest();
                 var modsIds = man.Mods ?? new List<string>();
 
-                // Map to names using local index; fall back to id if not found
+                // Map to names using combined index; fall back to id if not found
                 var refs = await LoadModsIndexAsync();
                 var byGuid = refs.ToDictionary(r => (r.guid ?? string.Empty).ToLowerInvariant(), r => r);
                 var byName = refs.ToDictionary(r => (r.name ?? string.Empty).ToLowerInvariant(), r => r);
@@ -165,7 +160,7 @@ public sealed partial class InstanciaInfoPage : Page
         var cd = new ContentDialog
         {
             Title = "Eliminar instancia",
-            Content = $"\u00BFSeguro que quieres eliminar la instancia '{InstanceName}' de la configuraci\u00F3n? (No borra archivos)",
+            Content = $"\u00BFSeguro que quieres eliminar la instancia '{InstanceName}' de la configuración? (No borra archivos)",
             PrimaryButtonText = "Eliminar",
             CloseButtonText = "Cancelar",
             XamlRoot = this.XamlRoot
@@ -209,17 +204,14 @@ public sealed partial class InstanciaInfoPage : Page
         }
     }
 
-    private static string TerbinConfigPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".terbin");
-
-    private async Task<List<UiTerbinIndexRef>> LoadModsIndexAsync()
+    private static async Task EnsureIndexAsync()
     {
-        // Ensure index via CLI (silent)
         try
         {
             var psi = new ProcessStartInfo
             {
                 FileName = "terbin",
-                Arguments = "mods update",
+                Arguments = "index update",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -230,31 +222,54 @@ public sealed partial class InstanciaInfoPage : Page
             using var proc = Process.Start(psi);
             if (proc != null)
             {
-                // read asynchronously but ignore content
                 _ = await proc.StandardOutput.ReadToEndAsync();
                 _ = await proc.StandardError.ReadToEndAsync();
                 await Task.Run(() => proc.WaitForExit());
             }
         }
         catch { /* ignore */ }
+    }
+
+    private static async Task<List<UiReference>> LoadModsIndexAsync()
+    {
+        await EnsureIndexAsync();
+
+        var all = new List<UiReference>();
+        try
+        {
+            if (File.Exists(LocalIndexPath))
+            {
+                var ljson = await File.ReadAllTextAsync(LocalIndexPath, Encoding.UTF8);
+                var lrefs = JsonConvert.DeserializeObject<List<UiReference>>(ljson) ?? new();
+                all.AddRange(lrefs);
+            }
+        }
+        catch { }
 
         try
         {
-            if (!File.Exists(TerbinConfigPath)) return new List<UiTerbinIndexRef>();
-            var json = await File.ReadAllTextAsync(TerbinConfigPath, Encoding.UTF8);
-            var cfg = JsonConvert.DeserializeObject<UiTerbinConfig>(json);
-            var refs = cfg?.index?.references ?? new List<UiTerbinIndexRef>();
-            // Normalize display when missing guid/name
-            foreach (var r in refs)
+            if (File.Exists(WebIndexPath))
             {
-                if (string.IsNullOrWhiteSpace(r.name) && !string.IsNullOrWhiteSpace(r.guid)) r.name = r.guid;
+                var wjson = await File.ReadAllTextAsync(WebIndexPath, Encoding.UTF8);
+                var wrefs = JsonConvert.DeserializeObject<List<UiReference>>(wjson) ?? new();
+                all.AddRange(wrefs);
             }
-            return refs;
         }
-        catch
+        catch { }
+
+        // Distinct by GUID then by name as fallback
+        var result = all
+            .GroupBy(r => string.IsNullOrWhiteSpace(r.guid) ? $"name:{r.name}" : $"guid:{r.guid}", StringComparer.OrdinalIgnoreCase)
+            .Select(g => g.First())
+            .ToList();
+
+        // Normalize display when missing guid/name
+        foreach (var r in result)
         {
-            return new List<UiTerbinIndexRef>();
+            if (string.IsNullOrWhiteSpace(r.name) && !string.IsNullOrWhiteSpace(r.guid)) r.name = r.guid;
         }
+
+        return result;
     }
 
     private async void OnAddModClick(object sender, RoutedEventArgs e)
@@ -263,7 +278,7 @@ public sealed partial class InstanciaInfoPage : Page
         var refs = await LoadModsIndexAsync();
         if (refs.Count == 0)
         {
-            _ = new ContentDialog { Title = "Índice vacío", Content = "No se encontraron mods en el índice. Ejecuta 'terbin mods update' e inténtalo de nuevo.", CloseButtonText = "Cerrar", XamlRoot = this.XamlRoot }.ShowAsync();
+            _ = new ContentDialog { Title = "Índice vacío", Content = "No se encontraron mods en el índice. Ejecuta 'terbin index update' e inténtalo de nuevo.", CloseButtonText = "Cerrar", XamlRoot = this.XamlRoot }.ShowAsync();
             return;
         }
 

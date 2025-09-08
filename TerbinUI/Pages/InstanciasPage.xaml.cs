@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
+using Newtonsoft.Json.Linq;
 
 namespace TerbinUI.Pages;
 
@@ -27,7 +28,7 @@ public sealed partial class InstanciasPage : Page
     public ObservableCollection<InstallationItem> FilteredItems { get; } = new();
     private string _searchQuery = string.Empty;
 
-    private static string TerbinConfigPath => System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".terbin");
+    private static string TerbinConfigPath => System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".terbin", "config.json");
     private static string UiConfigPath => System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".terbinui.json");
 
     public InstanciasPage()
@@ -39,6 +40,7 @@ public sealed partial class InstanciasPage : Page
     private class TerbinConfigLite
     {
         public Dictionary<string, string>? Instances { get; set; }
+        public string? FarlandsPath { get; set; }
     }
 
     private class UiConfig
@@ -105,6 +107,20 @@ public sealed partial class InstanciasPage : Page
         return basePath;
     }
 
+    private static string? ReadFarlandsPath()
+    {
+        try
+        {
+            if (!File.Exists(TerbinConfigPath)) return null;
+            var json = File.ReadAllText(TerbinConfigPath);
+            if (string.IsNullOrWhiteSpace(json)) return null;
+            var obj = JObject.Parse(json);
+            var val = (string?)obj["FarlandsPath"];
+            return string.IsNullOrWhiteSpace(val) ? null : val;
+        }
+        catch { return null; }
+    }
+
     private async Task LoadAsync()
     {
         try
@@ -146,6 +162,20 @@ public sealed partial class InstanciasPage : Page
 
     private async void OnAddInstanceClick(object sender, RoutedEventArgs e)
     {
+        // Ensure FarlandsPath is configured
+        var fpath = ReadFarlandsPath();
+        if (string.IsNullOrWhiteSpace(fpath))
+        {
+            _ = new ContentDialog
+            {
+                Title = "Falta configurar Farlands",
+                Content = new TextBlock { Text = "Configura la ruta de Farlands en Ajustes antes de crear una instancia.", TextWrapping = TextWrapping.Wrap },
+                CloseButtonText = "Cerrar",
+                XamlRoot = this.XamlRoot
+            }.ShowAsync();
+            return;
+        }
+
         var basePath = await EnsureInstallationsBasePathAsync();
         if (string.IsNullOrWhiteSpace(basePath)) return;
 
@@ -377,7 +407,7 @@ public sealed partial class InstanciasPage : Page
             var cd = new ContentDialog
             {
                 Title = "Eliminar instancia",
-                Content = $"\u00BFSeguro que quieres eliminar la instancia '{item.Name}' de la configuraci\u00F3n? (No borra archivos)",
+                Content = $"\u00BFSeguro que quieres eliminar la instancia '{item.Name}' de la configuración? (No borra archivos)",
                 PrimaryButtonText = "Eliminar",
                 CloseButtonText = "Cancelar",
                 XamlRoot = this.XamlRoot
