@@ -1,17 +1,38 @@
-﻿using Newtonsoft.Json;
+﻿using System.Runtime.InteropServices.Marshalling;
+using Newtonsoft.Json;
 using Terbin;
 using Terbin.Data;
+using Index = Terbin.Data.Index;
 
+// Carga contexto
 var ctx = new Ctx();
-ctx.manifestPath = Path.Combine(Environment.CurrentDirectory, "manifest.json");
-ctx.existManifest = File.Exists(ctx.manifestPath);
-if (ctx.existManifest) ctx.manifest = JsonConvert.DeserializeObject<ProjectManifest>(File.ReadAllText(ctx.manifestPath));
 
-ctx.config = new();
-if (File.Exists(ctx.config.configPath))
+var manifestPath = Path.Combine(Environment.CurrentDirectory, "manifest.json");
+var dotTerbin = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".terbin");
+var configPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".terbin/config.json");
+
+if (!Directory.Exists(dotTerbin))
 {
-    ctx.config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(ctx.config.configPath));
+    Directory.CreateDirectory(dotTerbin);
 }
+
+// Carga Manifest local
+ctx.existManifest = File.Exists(manifestPath);
+if (ctx.existManifest)
+{
+    ctx.manifest = JsonConvert.DeserializeObject<ProjectManifest>(File.ReadAllText(manifestPath));
+}
+
+// Carga configuración
+ctx.config = new();
+if (File.Exists(configPath))
+{
+    ctx.config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(configPath));
+}
+
+//TODO: Carga índice 
+ctx.index = new();
+ctx.index.Setup();
 
 
 var commands = new CommandList();
@@ -19,17 +40,16 @@ commands.init();
 
 if (args.Length < 1)
 {
-    // Default to help when no command provided
+
     commands["help"](ctx, Array.Empty<string>());
     return;
 }
 
-// Accept either plain command names or short aliases with '-' (e.g., -i)
+
 var raw = args[0];
 string cmdToken = raw;
 if (raw.StartsWith("--"))
 {
-    // Allow but not required
     cmdToken = raw.Substring(2);
 }
 else if (raw.StartsWith("-"))

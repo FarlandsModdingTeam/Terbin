@@ -58,7 +58,7 @@ class BuildManifest : ICommand
             {
                 ctx.Log.Warn("Config not loaded. Skipping dependencies import.");
             }
-            else if (ctx.config.index == null)
+            else if (ctx.index == null)
             {
                 ctx.Log.Warn("Config index not available. Skipping dependencies import.");
             }
@@ -79,7 +79,7 @@ class BuildManifest : ICommand
                     try
                     {
                         // Access using indexer as per existing contract. If missing, catch and warn.
-                        reference = ctx.config.index[d];
+                        reference = ctx.index[d];
                     }
                     catch
                     {

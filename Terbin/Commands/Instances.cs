@@ -299,10 +299,10 @@ public class Instances : ICommand
         {
             ctx.Log.Info($"Preparing to add mod '{mod}' to instance '{instance.Key}' at '{instance.Value}'.");
             ctx.Log.Info("Loading mods index...");
-            if (ctx.config.index == null) Index.Download(ctx);
+            if (ctx.index == null) ctx.index.webIndex.DownloadIndex();
             ctx.Log.Success("Mods index loaded.");
 
-            var reference = ctx.config.index[mod];
+            var reference = ctx.index[mod];
             var modGuid = reference.GUID;
             if (string.IsNullOrWhiteSpace(modGuid))
             {
