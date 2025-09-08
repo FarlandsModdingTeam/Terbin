@@ -121,7 +121,7 @@ class BuildManifest : ICommand
         namespace {{ctx.manifest.Name}};
         
         [BepInPlugin("{{ctx.manifest.GUID}}", "{{ctx.manifest.Name}}", "{{modVersion}}")]
-        {{dependencyAttributes.ToString()}}public class Plugin : BaseUnityPlugin
+        {{dependencyAttributes.ToString()}}public class {{ctx.manifest.Name}}Plugin : BaseUnityPlugin
         {
             internal static new ManualLogSource Logger;
                 
@@ -130,14 +130,48 @@ class BuildManifest : ICommand
                 // Plugin startup logic
                 Logger = base.Logger;
                 Logger.LogInfo($"Plugin '{{ctx.manifest.GUID}}' is loaded!");
+
+                var mod = new {{ctx.manifest.Name}}Mod();
+                mod.RegisterMod(this);
             }
         }
         """;
 
+        var mod = $$"""
+        using BepInEx;
+        using BepInEx.Logging;
+        using FarlandsCoreMod;
+
+        namespace {{ctx.manifest.Name}};
+        
+        public class {{ctx.manifest.Name}}Mod : Mod
+        {
+            public override void Awake()
+            {
+
+            }
+
+            public override void Start()
+            {
+
+            }
+
+            public override void Update()
+            {
+            
+            }
+        }
+        """;
+
+
         var outputPath = Path.Combine(Environment.CurrentDirectory, "plugin.cs");
+        var modPath = Path.Combine(Environment.CurrentDirectory, "mod.cs");
         try
         {
             File.WriteAllText(outputPath, plugin);
+
+            if(!File.Exists(modPath)) File.WriteAllText(modPath, mod);
+
             ctx.Log.Success($"Plugin generated successfully at: {outputPath}");
         }
         catch (Exception ex)
