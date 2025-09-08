@@ -216,6 +216,7 @@ public class Instances : ICommand
         var json = JsonConvert.SerializeObject(instanceManifest, Formatting.Indented);
         File.WriteAllText(manifestPath, json);
     }
+
     private static bool InstallMod(Ctx ctx, Reference mod, string dest)
     {
         var res = true;
@@ -244,6 +245,7 @@ public class Instances : ICommand
 
         return res;
     }
+
     private static void InstallBepInEx(Ctx ctx, string dest)
     {
         const string url = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.3/BepInEx_win_x64_5.4.23.3.zip";
