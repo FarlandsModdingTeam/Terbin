@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": ".NET Launch (Terbin -i add ...)",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}\\Terbin\\bin\\Debug\\net9.0\\Terbin.dll",
+      "args": ["-i", "add", "dadada", "UnityExplorer"],
+      "cwd": "${workspaceFolder}\\Terbin",
+      "console": "integratedTerminal"
+    }
+  ]
+}

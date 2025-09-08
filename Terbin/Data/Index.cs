@@ -29,11 +29,19 @@ public class Index
             localIndex.references = new();
             localIndex.Save();
         }
+        else
+        {
+            localIndex.LoadFromLocal();
+        }
 
         if (!webIndex.ExistLocalPath)
         {
             webIndex.DownloadIndex();
             webIndex.Save();
+        }
+        else
+        {
+            webIndex.LoadFromLocal();
         }
     }
 
@@ -69,6 +77,7 @@ public abstract class BasicIndex
 
     public void LoadFromLocal()
     {
+
         var json = File.ReadAllText(LocalPath);
         references = JsonConvert.DeserializeObject<List<Reference>>(json);
     }
