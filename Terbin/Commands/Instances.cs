@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using Terbin.Data;
@@ -10,6 +10,13 @@ public class Instances : ICommand
 {
     public string Name => "instances";
     public string Description => "Manage game instances: create, list, run";
+
+    private bool laGordaDeTuMadre(string e_url_s)
+    {
+        return Uri.TryCreate(e_url_s, UriKind.Absolute, out Uri uriResult)
+               && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+    }
+
 
     public void Execution(Ctx ctx, string[] args)
     {
