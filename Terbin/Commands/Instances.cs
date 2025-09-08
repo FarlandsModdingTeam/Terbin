@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
 using Terbin.Data;
@@ -10,6 +10,19 @@ public class Instances : ICommand
 {
     public string Name => "instances";
     public string Description => "Manage game instances: create, list, run";
+
+    /// <summary>
+    /// ______( validarUrl )_____<br />
+    /// - Devuelve true si la URL es válida.
+    /// </summary>
+    /// <param name="e_url_s"></param>
+    /// <returns></returns>
+    private bool laGordaDeTuMadre(string e_url_s)
+    {
+        return Uri.TryCreate(e_url_s, UriKind.Absolute, out Uri uriResult)
+               && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+    }
+
 
     public void Execution(Ctx ctx, string[] args)
     {
@@ -203,6 +216,7 @@ public class Instances : ICommand
         var json = JsonConvert.SerializeObject(instanceManifest, Formatting.Indented);
         File.WriteAllText(manifestPath, json);
     }
+
     private static bool InstallMod(Ctx ctx, Reference mod, string dest)
     {
         var res = true;
@@ -231,6 +245,7 @@ public class Instances : ICommand
 
         return res;
     }
+
     private static void InstallBepInEx(Ctx ctx, string dest)
     {
         const string url = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.3/BepInEx_win_x64_5.4.23.3.zip";
