@@ -11,6 +11,12 @@ public class Instances : ICommand
     public string Name => "instances";
     public string Description => "Manage game instances: create, list, run";
 
+    /// <summary>
+    /// ______( validarUrl )_____<br />
+    /// - Devuelve true si la URL es válida.
+    /// </summary>
+    /// <param name="e_url_s"></param>
+    /// <returns></returns>
     private bool laGordaDeTuMadre(string e_url_s)
     {
         return Uri.TryCreate(e_url_s, UriKind.Absolute, out Uri uriResult)
