@@ -155,6 +155,35 @@ namespace Terbin.Commands.Instances
 
         }
         /// <summary>
+        /// Compruebe si el mod ya está registrado en el manifiesto de instancia antes de instalarlo<br />
+        /// Quiero matar a Magincian.
+        /// </summary>
+        /// <param name="eDirInstance"></param>
+        /// <returns></returns>
+        public static InstanceManifest GetManifest(string eDirInstance)
+        {
+            string? manifestPath = Path.Combine(eDirInstance, "manifest.json");
+            InstanceManifest manifest;
+            try
+            {
+                if (File.Exists(manifestPath))
+                {
+                    manifest = JsonConvert.DeserializeObject<InstanceManifest>(File.ReadAllText(manifestPath)) ?? new InstanceManifest();
+                }
+                else
+                {
+                    manifest = new InstanceManifest();
+                }
+            }
+            catch
+            {
+                manifest = new InstanceManifest();
+            }
+            return manifest;
+        }
+
+
+        /// <summary>
         /// Maneja la accion de agregar mod.
         /// </summary>
         /// <param name="ctx">Contexto para operar</param>
@@ -177,24 +206,8 @@ namespace Terbin.Commands.Instances
                     return;
                 }
 
-                // Check if mod is already registered in the instance manifest before installing
-                var manifestPath = Path.Combine(instance.Value, "manifest.json");
-                InstanceManifest manifest;
-                try
-                {
-                    if (File.Exists(manifestPath))
-                    {
-                        manifest = JsonConvert.DeserializeObject<InstanceManifest>(File.ReadAllText(manifestPath)) ?? new InstanceManifest();
-                    }
-                    else
-                    {
-                        manifest = new InstanceManifest();
-                    }
-                }
-                catch
-                {
-                    manifest = new InstanceManifest();
-                }
+                InstanceManifest manifest = GetManifest(instance.Value);
+
                 manifest.Mods ??= new List<string>();
                 if (manifest.Mods.Contains(modGuid, StringComparer.OrdinalIgnoreCase))
                 {
@@ -214,6 +227,17 @@ namespace Terbin.Commands.Instances
             {
                 ctx.Log.Error($"Failed to add mod: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Asiendose.
+        /// </summary>
+        /// <param name="ctx"></param>
+        /// <param name="instance"></param>
+        /// <param name="mod"></param>
+        private static void HandleUnicLocalAdd(Ctx ctx, KeyValuePair<string, string> instance, string mod)
+        {
+
         }
     }
 }
