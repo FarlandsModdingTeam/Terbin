@@ -131,8 +131,7 @@ class BuildManifest : ICommand
                 Logger = base.Logger;
                 Logger.LogInfo($"Plugin '{{ctx.manifest.GUID}}' is loaded!");
 
-                var mod = new {{ctx.manifest.Name}}Mod();
-                mod.RegisterMod(this);
+                gameObject.AddComponent<testMod>().RegisterMod(this);
             }
         }
         """;
@@ -146,17 +145,12 @@ class BuildManifest : ICommand
         
         public class {{ctx.manifest.Name}}Mod : Mod
         {
-            public override void Awake()
+            public void Start()
             {
 
             }
 
-            public override void Start()
-            {
-
-            }
-
-            public override void Update()
+            public void Update()
             {
             
             }
