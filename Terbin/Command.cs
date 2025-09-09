@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace Terbin;
 
@@ -69,9 +69,23 @@ class CommandList
     }
 }
 
+/// <summary>
+/// Intefaz que representa un comando.
+/// </summary>
 interface ICommand
 {
+    /// <summary>
+    /// Nombre del comando a ejecutar.
+    /// </summary>
     string Name { get; }
+    /// <summary>
+    /// Descripción del comando.
+    /// </summary>
     string Description { get; }
+    /// <summary>
+    /// Función que se ejecuta al invocar el comando.
+    /// </summary>
+    /// <param name="ctx">Contexto necesario para operar</param>
+    /// <param name="args">Valores pasado por comando</param>
     void Execution(Ctx ctx, string[] args);
 }

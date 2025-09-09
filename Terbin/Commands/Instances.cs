@@ -203,7 +203,15 @@ public class Instances : ICommand
 
         ctx.Log.Success($"Instance '{name}' created at '{dest}'.");
     }
-
+    /// <summary>
+    /// Genera el manifest.json de la instancia.<br />
+    /// sobre escribe todo aquel que exista y pone valores predeterminados:<br />
+    /// Version = "1.0.0"<br />
+    /// Mods = []<br />
+    /// El nombre es el que se le pasa por parámetro.
+    /// </summary>
+    /// <param name="dest">destino donde generar</param>
+    /// <param name="name">nombre del MOD</param>
     private static void GenerateInstanceManifest(string dest, string name)
     {
         var manifestPath = Path.Combine(dest, "manifest.json");
@@ -217,6 +225,13 @@ public class Instances : ICommand
         File.WriteAllText(manifestPath, json);
     }
 
+    /// <summary>
+    /// Funcion para instalar un mod en una instancia.
+    /// </summary>
+    /// <param name="ctx">Contexto necesario para operar</param>
+    /// <param name="mod">Renfia del mod en el Manifest</param>
+    /// <param name="dest">destino del json</param>
+    /// <returns></returns>
     private static bool InstallMod(Ctx ctx, Reference mod, string dest)
     {
         var res = true;
@@ -245,7 +260,11 @@ public class Instances : ICommand
 
         return res;
     }
-
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="ctx"></param>
+    /// <param name="dest"></param>
     private static void InstallBepInEx(Ctx ctx, string dest)
     {
         const string url = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.3/BepInEx_win_x64_5.4.23.3.zip";
