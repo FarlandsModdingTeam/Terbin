@@ -36,11 +36,6 @@
                         <SymbolIcon Symbol="Home"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="InstalarMod" Tag="instalarMod">
-                    <NavigationViewItem.Icon>
-                        <SymbolIcon Symbol="Home"/>
-                    </NavigationViewItem.Icon>
-                </NavigationViewItem>
                 <NavigationViewItem Content="Instancias" Tag="instancias">
                     <NavigationViewItem.Icon>
                         <SymbolIcon Symbol="AllApps"/>

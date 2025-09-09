@@ -17,7 +17,6 @@ namespace TerbinUI
             ["instancias"] = typeof(Pages.InstanciasPage),
             ["mods"] = typeof(Pages.ModsPage),
             ["ajustes"] = typeof(Pages.AjustesPage),
-            ["instalarMod"] = typeof(Pages.InstalarMod),
         };
 
         public MainWindow()
