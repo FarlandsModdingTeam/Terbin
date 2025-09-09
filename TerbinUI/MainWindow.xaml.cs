@@ -1,4 +1,4 @@
-using Microsoft.UI;
+﻿using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -16,7 +16,8 @@ namespace TerbinUI
             ["inicio"] = typeof(Pages.InicioPage),
             ["instancias"] = typeof(Pages.InstanciasPage),
             ["mods"] = typeof(Pages.ModsPage),
-            ["ajustes"] = typeof(Pages.AjustesPage)
+            ["ajustes"] = typeof(Pages.AjustesPage),
+            ["instalarMod"] = typeof(Pages.InstalarMod),
         };
 
         public MainWindow()
@@ -103,6 +104,7 @@ namespace TerbinUI
                 if (ContentFrame.SourcePageType == pageType)
                     return;
 
+                // TODO: try cacth.
                 ContentFrame.Navigate(pageType);
             }
         }
