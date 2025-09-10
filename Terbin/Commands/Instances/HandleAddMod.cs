@@ -13,28 +13,48 @@ namespace Terbin.Commands.Instances
     /// </summary>
     internal class HandleAddMod
     {
+        public static bool DownloadMod(Ctx ctx, Reference mod, string dest)
+        {
+            var res = true;
+            try
+            {
+                ctx.Log.Info($"Downloading {mod.Name}... :: {dest}");
+                var manifesJson = NetUtil.DownloadString(mod.manifestUrl);
+                var manifest = JsonConvert.DeserializeObject<ProjectManifest>(manifesJson);
+                var url = Path.Combine(manifest.url, $"releases/download/v{manifest.Versions.Last()}/{manifest.Name}.zip");
+                NetUtil.DownloadFileWithProgress(url, dest);
+                Console.WriteLine("");
+            }
+            catch (Exception ex)
+            {
+                ctx.Log.Error($"Failed to Download {mod.Name}: {ex.Message}");
+                res = false;
+            }
+            finally
+            {
+                //try { if (File.Exists(tmpZip)) File.Delete(tmpZip); } catch { /* ignore */ }
+            }
 
+            return res;
+        }
         /// <summary>
-        /// Funcion para instalar un mod en una instancia.
+        /// Funcion para descargar de FCM un mod.
         /// </summary>
         /// <param name="ctx">Contexto necesario para operar</param>
         /// <param name="mod">Renfia del mod en el Manifest</param>
         /// <param name="dest">destino del json</param>
-        /// <returns></returns>
+        /// <returns>true si se descargo correctamente</returns>
         public static bool InstallMod(Ctx ctx, Reference mod, string dest)
         {
             var res = true;
             string tmpZip = Path.Combine(Path.GetTempPath(), $"{mod.Name}_{Guid.NewGuid():N}.zip");
             try
             {
-                ctx.Log.Info($"Downloading {mod.Name}... :: {tmpZip}");
-                var manifesJson = NetUtil.DownloadString(mod.manifestUrl);
-                var manifest = JsonConvert.DeserializeObject<ProjectManifest>(manifesJson);
-                var url = Path.Combine(manifest.url, $"releases/download/v{manifest.Versions.Last()}/{manifest.Name}.zip");
-                NetUtil.DownloadFileWithProgress(url, tmpZip);
-                Console.WriteLine("");
+                if (!DownloadMod(ctx, mod, tmpZip)) return false;
+
                 ctx.Log.Info($"Extracting {mod.Name}...");
                 System.IO.Compression.ZipFile.ExtractToDirectory(tmpZip, dest, overwriteFiles: true);
+
                 ctx.Log.Success($"{mod.Name} installed.");
             }
             catch (Exception ex)
