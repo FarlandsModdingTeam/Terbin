@@ -13,7 +13,7 @@ namespace Terbin.Commands.Instances
     /// </summary>
     internal class HandleAddMod
     {
-        public static bool DownloadMod(Ctx ctx, Reference mod, string dest)
+        public static (bool exito, string lugar) DownloadMod(Ctx ctx, Reference mod, string? dest = null)
         {
             var res = true;
             try
@@ -38,11 +38,11 @@ namespace Terbin.Commands.Instances
             return res;
         }
         /// <summary>
-        /// Funcion para descargar de FCM un mod.
+        /// Funcion para "instalar" de FCM un mod.
         /// </summary>
         /// <param name="ctx">Contexto necesario para operar</param>
-        /// <param name="mod">Renfia del mod en el Manifest</param>
-        /// <param name="dest">destino del json</param>
+        /// <param name="mod">Referencia del mod en el Manifest</param>
+        /// <param name="dest">destino donde extraer mod</param>
         /// <returns>true si se descargo correctamente</returns>
         public static bool InstallMod(Ctx ctx, Reference mod, string dest)
         {
