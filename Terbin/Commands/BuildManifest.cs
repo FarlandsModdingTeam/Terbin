@@ -117,6 +117,7 @@ class BuildManifest : ICommand
         var plugin = $$"""
         using BepInEx;
         using BepInEx.Logging;
+        using HarmonyLib;
 
         namespace {{ctx.manifest.Name}};
         
@@ -124,12 +125,18 @@ class BuildManifest : ICommand
         {{dependencyAttributes.ToString()}}public class {{ctx.manifest.Name}}Plugin : BaseUnityPlugin
         {
             internal static new ManualLogSource Logger;
-                
+            public Harmony harmony;
+
             private void Awake()
             {
                 // Plugin startup logic
                 Logger = base.Logger;
                 Logger.LogInfo($"Plugin '{{ctx.manifest.GUID}}' is loaded!");
+
+                harmony = new Harmony("{{ctx.manifest.GUID}}");
+                harmony.PatchAll();
+
+                Logger.LogInfo("Patches applied");
 
                 gameObject.AddComponent<testMod>().RegisterMod(this);
             }
@@ -207,6 +214,7 @@ class BuildManifest : ICommand
             var plugin = $$"""
                 using BepInEx;
                 using BepInEx.Logging;
+                using HarmonyLib;
 
                 namespace {{ctx.manifest.Name}};
                 
@@ -214,12 +222,18 @@ class BuildManifest : ICommand
                 public class Plugin : BaseUnityPlugin
                 {
                     internal static new ManualLogSource Logger;
-                        
+                    private Harmony harmony;
+                    
                     private void Awake()
                     {
                         // Plugin startup logic
                         Logger = base.Logger;
                         Logger.LogInfo($"Plugin '{{ctx.manifest.GUID}}' is loaded!");
+
+                        harmony = new Harmony(PluginInfo.GUID);
+                        harmony.PatchAll();
+
+                        Logger.LogInfo("Patches applied");
                     }
                 }
                 """;
