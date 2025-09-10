@@ -13,9 +13,19 @@ namespace Terbin.Commands.Instances
     /// </summary>
     internal class HandleAddMod
     {
-        public static (bool exito, string lugar) DownloadMod(Ctx ctx, Reference mod, string? dest = null)
+        // TODO: preparalo para NexxudMod.
+        /// <summary>
+        /// - Descarga un mod desde su URL de manifiesto y lo guarda en un archivo ZIP temporal.<br />
+        /// - Nota: Si no se pasa destino, se crea un archivo temporal en el directorio temporal del sistema.<br />
+        /// </summary>
+        /// <param name="ctx">Contexto para poder operar</param>
+        /// <param name="mod">Referencia al mod en json</param>
+        /// <param name="dest">destino donde descargara el mod, Nota: mirar descripcion del motedo</param>
+        /// <returns>Tubla<br/>success > si sea descargado con exito <br />place > lugar donde sea descargado</returns>
+        public static (bool success, string place) DownloadMod(Ctx ctx, Reference mod, string? dest = null)
         {
             var res = true;
+            dest ??= Path.Combine(Path.GetTempPath(), $"{mod.Name}_{Guid.NewGuid():N}.zip");
             try
             {
                 ctx.Log.Info($"Downloading {mod.Name}... :: {dest}");
@@ -35,7 +45,7 @@ namespace Terbin.Commands.Instances
                 //try { if (File.Exists(tmpZip)) File.Delete(tmpZip); } catch { /* ignore */ }
             }
 
-            return res;
+            return (res, dest);
         }
         /// <summary>
         /// Funcion para "instalar" de FCM un mod.
@@ -47,11 +57,18 @@ namespace Terbin.Commands.Instances
         public static bool InstallMod(Ctx ctx, Reference mod, string dest)
         {
             var res = true;
-            string tmpZip = Path.Combine(Path.GetTempPath(), $"{mod.Name}_{Guid.NewGuid():N}.zip");
+            string tmpZip = string.Empty;
+
+            if (!mod.manifestUrl.Contains("file:///"))
+            {
+                tmpZip = Path.Combine(Path.GetTempPath(), $"{mod.Name}_{Guid.NewGuid():N}.zip");
+                if (!DownloadMod(ctx, mod, tmpZip).success) return false;
+            }
+            else
+                tmpZip = mod.manifestUrl.Replace("file:///", string.Empty).Replace('/', Path.DirectorySeparatorChar);
+
             try
             {
-                if (!DownloadMod(ctx, mod, tmpZip)) return false;
-
                 ctx.Log.Info($"Extracting {mod.Name}...");
                 System.IO.Compression.ZipFile.ExtractToDirectory(tmpZip, dest, overwriteFiles: true);
 
