@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 namespace Terbin.Data;
 
 /// <summary>
-/// Es la referencia del mod en el Json (¿que json?, en proceso de descubirlo).
+/// Es la referencia del mod en el Json (¿que json?, El del Index).
 /// </summary>
 public class Reference
 {
