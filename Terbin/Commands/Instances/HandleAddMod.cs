@@ -100,12 +100,8 @@ namespace Terbin.Commands.Instances
 
             return res;
         }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="ctx"></param>
-        /// <param name="dest"></param>
-        private static void InstallBepInEx(Ctx ctx, string dest)
+
+        public static void InstallBepInEx(Ctx ctx, string dest)
         {
             const string url = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.3/BepInEx_win_x64_5.4.23.3.zip";
 
@@ -286,12 +282,9 @@ namespace Terbin.Commands.Instances
             }
         }
 
-        /// <summary>
-        /// Asiendose.
-        /// </summary>
-        /// <param name="ctx"></param>
-        /// <param name="instance"></param>
-        /// <param name="mod"></param>
+
+
+
         private static void HandleUnicLocalAdd(Ctx ctx, KeyValuePair<string, string> instance, string mod)
         {
             try
