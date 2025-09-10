@@ -47,6 +47,25 @@ namespace Terbin.Commands.Instances
 
             return (res, dest);
         }
+
+        private static byte handleDirMod(Ctx ctx, Reference mod, out string dir)
+        {
+            byte tipe = 0; 
+
+            if (!mod.manifestUrl.Contains("file:///"))
+            {
+                dir = Path.Combine(Path.GetTempPath(), $"{mod.Name}_{Guid.NewGuid():N}.zip");
+                tipe = 1;
+            }
+            else
+            {
+                dir = mod.manifestUrl.Replace("file:///", string.Empty).Replace('/', Path.DirectorySeparatorChar);
+                tipe = 2;
+            }
+
+            return tipe;
+        }
+
         /// <summary>
         /// Funcion para "instalar" de FCM un mod.
         /// </summary>
@@ -59,13 +78,8 @@ namespace Terbin.Commands.Instances
             var res = true;
             string tmpZip = string.Empty;
 
-            if (!mod.manifestUrl.Contains("file:///"))
-            {
-                tmpZip = Path.Combine(Path.GetTempPath(), $"{mod.Name}_{Guid.NewGuid():N}.zip");
+            if (handleDirMod(ctx, mod, out tmpZip) == 1)
                 if (!DownloadMod(ctx, mod, tmpZip).success) return false;
-            }
-            else
-                tmpZip = mod.manifestUrl.Replace("file:///", string.Empty).Replace('/', Path.DirectorySeparatorChar);
 
             try
             {
