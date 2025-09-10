@@ -232,6 +232,7 @@ public class Instances : ICommand
     /// <param name="mod">Renfia del mod en el Manifest</param>
     /// <param name="dest">destino del json</param>
     /// <returns></returns>
+    [Obsolete("usa clase HandleAddMod")]
     private static bool InstallMod(Ctx ctx, Reference mod, string dest)
     {
         var res = true;
@@ -265,6 +266,7 @@ public class Instances : ICommand
     /// </summary>
     /// <param name="ctx"></param>
     /// <param name="dest"></param>
+    [Obsolete("usa clase HandleAddMod")]
     private static void InstallBepInEx(Ctx ctx, string dest)
     {
         const string url = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.3/BepInEx_win_x64_5.4.23.3.zip";
@@ -304,7 +306,13 @@ public class Instances : ICommand
             try { if (File.Exists(tmpZip)) File.Delete(tmpZip); } catch { /* ignore */ }
         }
     }
-
+    /// <summary>
+    /// Maneja la accion de agregar mod.<br />
+    /// Comprobando antes que la instancia exista y que el mod no este ya instalado.<br />
+    /// </summary>
+    /// <param name="ctx">Contexto para operar</param>
+    /// <param name="args">[nombre de la Instancia, nombre del mod]</param>
+    [Obsolete("usa clase HandleAddMod")]
     private static void HandleAdd(Ctx ctx, string[] args)
     {
         if (args.Length < 2)
@@ -326,7 +334,13 @@ public class Instances : ICommand
         }
         HandleUnicAdd(ctx, new KeyValuePair<string, string>(key, instPath), mod);
     }
-
+    /// <summary>
+    /// Maneja la accion de agregar mod.
+    /// </summary>
+    /// <param name="ctx">Contexto para operar</param>
+    /// <param name="instance">instancia (nombre, ruta)</param>
+    /// <param name="mod">nombre del mod</param>
+    [Obsolete("usa clase HandleAddMod")]
     private static void HandleUnicAdd(Ctx ctx, KeyValuePair<string, string> instance, string mod)
     {
         try
@@ -382,7 +396,7 @@ public class Instances : ICommand
             ctx.Log.Error($"Failed to add mod: {ex.Message}");
         }
     }
-
+    [Obsolete("usa clase HandleAddMod")]
     private static void AddModGuidToManifest(string instanceRoot, string defaultName, string modGuid)
     {
         var manifestPath = Path.Combine(instanceRoot, "manifest.json");

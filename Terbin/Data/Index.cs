@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Newtonsoft.Json;
 using Terbin.Commands;
 
@@ -96,6 +96,9 @@ public class WebIndex : BasicIndex
 
     public override string localPath => ".terbin/web.index";
 
+    /// <summary>
+    /// Descargar el indice de mods de FarlandsCoreMod.
+    /// </summary>
     public void DownloadIndex()
     {
         var indexJson = NetUtil.DownloadString(indexUrl);
