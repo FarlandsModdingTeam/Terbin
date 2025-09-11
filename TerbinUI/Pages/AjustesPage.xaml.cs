@@ -13,6 +13,13 @@ namespace TerbinUI.Pages;
 
 public sealed partial class AjustesPage : Page
 {
+    // *************************( Variables )************************* //
+    private static bool enDebug = false;
+
+    // *************************( GSI )************************* //
+    public static bool EnDebug => enDebug;
+
+    // *************************( clases )************************* //
     private class UiConfig
     {
         public string? InstallationsPath { get; set; }
@@ -175,5 +182,17 @@ public sealed partial class AjustesPage : Page
         return folder?.Path;
     }
 
+    public static void CambiarDepuracion(object sender, RoutedEventArgs e)
+    {
+        if (sender is AjustesPage page)
+            page.cambiarDepuracion(null);
+    }
 
+    private void cambiarDepuracion(bool? enter = null)
+    {
+        if (enter == null)
+            enDebug = !enDebug;
+        else
+            enDebug = enter.Value;
+    }
 }

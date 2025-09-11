@@ -50,7 +50,11 @@ namespace Terbin.Commands.HandInstances
 
         private static byte handleDirMod(Ctx ctx, Reference mod, out string dir)
         {
-            byte tipe = 0; 
+            byte tipe = 0;
+            dir = string.Empty;
+
+            if (mod.manifestUrl == null)
+                return tipe;
 
             if (!mod.manifestUrl.Contains("file:///"))
             {

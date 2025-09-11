@@ -74,7 +74,8 @@
                     Grid.Row="3"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
-                    Margin="0,16,0,0"/>
+                    Margin="0,16,0,0"
+                    x:Name="BtnAgregarModLocal"/>
         </Grid>
     </ScrollViewer>
 </Page>

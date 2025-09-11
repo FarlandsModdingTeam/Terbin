@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.ApplicationModel.DynamicDependency;
@@ -49,4 +49,6 @@ public static class Program
             return false;
         }
     }
+
+
 }

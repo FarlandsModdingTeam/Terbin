@@ -50,7 +50,11 @@
             <!-- Depuracion -->
             <StackPanel>
                 <TextBlock Text="Depuraci&#xF3;n" Style="{StaticResource TitleTextBlockStyle}"/>
-                <CheckBox Content="Habilitar depuración" x:Name="CbDebugEnabled" Margin="0,8,0,0"/>
+                <CheckBox Content="Habilitar depuración"
+                          Checked="CambiarDepuracion"
+                          Unchecked="CambiarDepuracion"
+                          x:Name="CbDebugEnabled" 
+                          Margin="0,8,0,0"/>
             </StackPanel>
 
         </StackPanel>
