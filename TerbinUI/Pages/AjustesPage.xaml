@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Class="TerbinUI.Pages.AjustesPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -43,6 +43,16 @@
                     <Button Grid.Column="2" Content="Abrir" Click="OnOpenInstallationsPath_Click"/>
                 </Grid>
             </StackPanel>
+
+            <!-- Separador -->
+            <Border Height="1" Background="{ThemeResource DividerStrokeColorDefault}" Opacity="0.6"/>
+            
+            <!-- Depuracion -->
+            <StackPanel>
+                <TextBlock Text="Depuraci&#xF3;n" Style="{StaticResource TitleTextBlockStyle}"/>
+                <CheckBox Content="Habilitar depuración" x:Name="CbDebugEnabled" Margin="0,8,0,0"/>
+            </StackPanel>
+
         </StackPanel>
     </ScrollViewer>
 </Page>
