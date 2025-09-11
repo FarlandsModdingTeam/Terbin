@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using Terbin.Data;
 
-namespace Terbin.Commands.Instances
+namespace Terbin.Commands.HandInstances
 {
     /// <summary>
     /// ______( Manejar Agregar Mod )______<br />
@@ -13,28 +13,83 @@ namespace Terbin.Commands.Instances
     /// </summary>
     internal class HandleAddMod
     {
-
+        // TODO: preparalo para NexxudMod.
         /// <summary>
-        /// Funcion para instalar un mod en una instancia.
+        /// - Descarga un mod desde su URL de manifiesto y lo guarda en un archivo ZIP temporal.<br />
+        /// - Nota: Si no se pasa destino, se crea un archivo temporal en el directorio temporal del sistema.<br />
         /// </summary>
-        /// <param name="ctx">Contexto necesario para operar</param>
-        /// <param name="mod">Renfia del mod en el Manifest</param>
-        /// <param name="dest">destino del json</param>
-        /// <returns></returns>
-        public static bool InstallMod(Ctx ctx, Reference mod, string dest)
+        /// <param name="ctx">Contexto para poder operar</param>
+        /// <param name="mod">Referencia al mod en json</param>
+        /// <param name="dest">destino donde descargara el mod, Nota: mirar descripcion del motedo</param>
+        /// <returns>Tubla<br/>success > si sea descargado con exito <br />place > lugar donde sea descargado</returns>
+        public static (bool success, string place) DownloadMod(Ctx ctx, Reference mod, string? dest = null)
         {
             var res = true;
-            string tmpZip = Path.Combine(Path.GetTempPath(), $"{mod.Name}_{Guid.NewGuid():N}.zip");
+            dest ??= Path.Combine(Path.GetTempPath(), $"{mod.Name}_{Guid.NewGuid():N}.zip");
             try
             {
-                ctx.Log.Info($"Downloading {mod.Name}... :: {tmpZip}");
+                ctx.Log.Info($"Downloading {mod.Name}... :: {dest}");
                 var manifesJson = NetUtil.DownloadString(mod.manifestUrl);
                 var manifest = JsonConvert.DeserializeObject<ProjectManifest>(manifesJson);
                 var url = Path.Combine(manifest.url, $"releases/download/v{manifest.Versions.Last()}/{manifest.Name}.zip");
-                NetUtil.DownloadFileWithProgress(url, tmpZip);
+                NetUtil.DownloadFileWithProgress(url, dest);
                 Console.WriteLine("");
+            }
+            catch (Exception ex)
+            {
+                ctx.Log.Error($"Failed to Download {mod.Name}: {ex.Message}");
+                res = false;
+            }
+            finally
+            {
+                //try { if (File.Exists(tmpZip)) File.Delete(tmpZip); } catch { /* ignore */ }
+            }
+
+            return (res, dest);
+        }
+
+        private static byte handleDirMod(Ctx ctx, Reference mod, out string dir)
+        {
+            byte tipe = 0;
+            dir = string.Empty;
+
+            if (mod.manifestUrl == null)
+                return tipe;
+
+            if (!mod.manifestUrl.Contains("file:///"))
+            {
+                dir = Path.Combine(Path.GetTempPath(), $"{mod.Name}_{Guid.NewGuid():N}.zip");
+                tipe = 1;
+            }
+            else
+            {
+                dir = mod.manifestUrl.Replace("file:///", string.Empty).Replace('/', Path.DirectorySeparatorChar);
+                tipe = 2;
+            }
+
+            return tipe;
+        }
+
+        /// <summary>
+        /// Funcion para "instalar" de FCM un mod.
+        /// </summary>
+        /// <param name="ctx">Contexto necesario para operar</param>
+        /// <param name="mod">Referencia del mod en el Manifest</param>
+        /// <param name="dest">destino donde extraer mod</param>
+        /// <returns>true si se descargo correctamente</returns>
+        public static bool InstallMod(Ctx ctx, Reference mod, string dest)
+        {
+            var res = true;
+            string tmpZip = string.Empty;
+
+            if (handleDirMod(ctx, mod, out tmpZip) == 1)
+                if (!DownloadMod(ctx, mod, tmpZip).success) return false;
+
+            try
+            {
                 ctx.Log.Info($"Extracting {mod.Name}...");
                 System.IO.Compression.ZipFile.ExtractToDirectory(tmpZip, dest, overwriteFiles: true);
+
                 ctx.Log.Success($"{mod.Name} installed.");
             }
             catch (Exception ex)
@@ -49,12 +104,8 @@ namespace Terbin.Commands.Instances
 
             return res;
         }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="ctx"></param>
-        /// <param name="dest"></param>
-        private static void InstallBepInEx(Ctx ctx, string dest)
+
+        public static void InstallBepInEx(Ctx ctx, string dest)
         {
             const string url = "https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.3/BepInEx_win_x64_5.4.23.3.zip";
 
@@ -94,13 +145,54 @@ namespace Terbin.Commands.Instances
             }
         }
 
+
+        /// <summary>
+        /// Maneja la accion de agregar mod.
+        /// </summary>
+        /// <param name="ctx">Contexto para operar</param>
+        /// <param name="instance">instancia (nombre, ruta)</param>
+        /// <param name="mod">nombre del mod</param>
+        private static void HandleUnicAdd(Ctx ctx, KeyValuePair<string, string> instance, string mod)
+        {
+            try
+            {
+                ctx.Log.Info($"Preparing to add mod '{mod}' to instance '{instance.Key}' at '{instance.Value}'.");
+                ctx.Log.Info("Loading mods index...");
+                if (ctx.index == null) ctx.index.webIndex.DownloadIndex();
+                ctx.Log.Success("Mods index loaded.");
+
+                Reference? reference = ctx.index[mod];
+                string? modGuid = reference.GUID;
+                if (string.IsNullOrWhiteSpace(modGuid))
+                {
+                    ctx.Log.Error("Selected mod has no GUID or Name.");
+                    return;
+                }
+
+                InstanceManifest manifest = GetManifest(instance.Value);
+
+                manifest.Mods ??= new List<string>();
+                if (manifest.Mods.Contains(modGuid, StringComparer.OrdinalIgnoreCase))
+                {
+                    ctx.Log.Error($"Mod already installed: {modGuid}");
+                    return;
+                }
+
+                HandleInstallMod(ctx, (instance.Key, instance.Value), modGuid, reference);
+            }
+            catch (Exception ex)
+            {
+                ctx.Log.Error($"Failed to add mod: {ex.Message}");
+            }
+        }
+
         /// <summary>
         /// Maneja la accion de agregar mod.<br />
         /// Comprobando antes que la instancia exista y que el mod no este ya instalado.<br />
         /// </summary>
         /// <param name="ctx">Contexto para operar</param>
         /// <param name="args">[nombre de la Instancia, nombre del mod]</param>
-        private static void HandleAdd(Ctx ctx, string[] args)
+        public static void HandleAdd(Ctx ctx, string[] args)
         {
             if (args.Length < 2)
             {
@@ -156,7 +248,6 @@ namespace Terbin.Commands.Instances
         }
         /// <summary>
         /// Compruebe si el mod ya está registrado en el manifiesto de instancia antes de instalarlo<br />
-        /// Quiero matar a Magincian.
         /// </summary>
         /// <param name="eDirInstance"></param>
         /// <returns></returns>
@@ -167,13 +258,9 @@ namespace Terbin.Commands.Instances
             try
             {
                 if (File.Exists(manifestPath))
-                {
                     manifest = JsonConvert.DeserializeObject<InstanceManifest>(File.ReadAllText(manifestPath)) ?? new InstanceManifest();
-                }
                 else
-                {
                     manifest = new InstanceManifest();
-                }
             }
             catch
             {
@@ -182,62 +269,27 @@ namespace Terbin.Commands.Instances
             return manifest;
         }
 
-
         /// <summary>
-        /// Maneja la accion de agregar mod.
+        /// - Intenta instalar el mod en BepInEx de la instancia.<br />
+        /// - Si la instalación es exitosa, agrega el GUID del mod al manifiesto de la instancia.
         /// </summary>
-        /// <param name="ctx">Contexto para operar</param>
-        /// <param name="instance">instancia (nombre, ruta)</param>
-        /// <param name="mod">nombre del mod</param>
-        private static void HandleUnicAdd(Ctx ctx, KeyValuePair<string, string> instance, string mod)
-        {
-            try
-            {
-                ctx.Log.Info($"Preparing to add mod '{mod}' to instance '{instance.Key}' at '{instance.Value}'.");
-                ctx.Log.Info("Loading mods index...");
-                if (ctx.index == null) ctx.index.webIndex.DownloadIndex();
-                ctx.Log.Success("Mods index loaded.");
-
-                var reference = ctx.index[mod];
-                var modGuid = reference.GUID;
-                if (string.IsNullOrWhiteSpace(modGuid))
-                {
-                    ctx.Log.Error("Selected mod has no GUID or Name.");
-                    return;
-                }
-
-                InstanceManifest manifest = GetManifest(instance.Value);
-
-                manifest.Mods ??= new List<string>();
-                if (manifest.Mods.Contains(modGuid, StringComparer.OrdinalIgnoreCase))
-                {
-                    ctx.Log.Error($"Mod already installed: {modGuid}");
-                    return;
-                }
-
-                string dest = Path.Combine(instance.Value, "BepInEx");
-                if (InstallMod(ctx, reference, dest))
-                {
-                    AddModGuidToManifest(instance.Value, instance.Key, modGuid);
-                    ctx.Log.Success($"Added mod GUID to manifest: {modGuid}");
-                }
-
-            }
-            catch (Exception ex)
-            {
-                ctx.Log.Error($"Failed to add mod: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Asiendose.
-        /// </summary>
-        /// <param name="ctx"></param>
+        /// <param name="ctx">Contexto necesario para gestionar</param>
         /// <param name="instance"></param>
-        /// <param name="mod"></param>
-        private static void HandleUnicLocalAdd(Ctx ctx, KeyValuePair<string, string> instance, string mod)
+        /// <param name="modGuid"></param>
+        /// <param name="reference"></param>
+        private static void HandleInstallMod(Ctx ctx, (string Key, string Value) instance, string modGuid, Reference reference)
         {
-
+            string dest = Path.Combine(instance.Value, "BepInEx");
+            if (InstallMod(ctx, reference, dest))
+            {
+                AddModGuidToManifest(instance.Value, instance.Key, modGuid);
+                ctx.Log.Success($"Added mod GUID to manifest: {modGuid}");
+            }
         }
+
+
+
+
+
     }
 }
