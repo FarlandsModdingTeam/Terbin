@@ -151,7 +151,7 @@ namespace Terbin.Commands.HandInstances
         /// </summary>
         /// <param name="ctx">Contexto para operar</param>
         /// <param name="args">[nombre de la Instancia, nombre del mod]</param>
-        private static void HandleAdd(Ctx ctx, string[] args)
+        public static void HandleAdd(Ctx ctx, string[] args)
         {
             if (args.Length < 2)
             {

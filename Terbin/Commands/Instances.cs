@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using Terbin.Data;
+using Terbin.Commands.HandInstances;
 using Index = Terbin.Data.Index;
 
 namespace Terbin.Commands;
@@ -57,7 +58,7 @@ public class Instances : ICommand
                 HandleDelete(ctx, args.Skip(1).ToArray());
                 break;
             case "add":
-                HandleAdd(ctx, args.Skip(1).ToArray());
+                HandleAddMod.HandleAdd(ctx, args.Skip(1).ToArray());
                 break;
             default:
                 ctx.Log.Error($"Unknown subcommand: {sub}");
@@ -174,7 +175,7 @@ public class Instances : ICommand
             ctx.Log.Success("Clone completed.");
 
             // Install BepInEx
-            InstallBepInEx(ctx, dest);
+            HandleAddMod.InstallBepInEx(ctx, dest);
         }
         catch (Exception ex)
         {
