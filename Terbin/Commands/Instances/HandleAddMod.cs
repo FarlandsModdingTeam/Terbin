@@ -286,41 +286,5 @@ namespace Terbin.Commands.HandInstances
             }
         }
 
-
-
-
-        private static void HandleUnicLocalAdd(Ctx ctx, KeyValuePair<string, string> instance, string mod)
-        {
-            try
-            {
-                ctx.Log.Info($"Preparing to add mod '{mod}' to instance '{instance.Key}' at '{instance.Value}'.");
-                ctx.Log.Info("Loading mods index...");
-                //if (ctx.index == null) ctx.index.webIndex.DownloadIndex();
-                ctx.Log.Success("Mods index loaded.");
-
-                Reference? reference = ctx.index[mod];
-                string? modGuid = reference.GUID;
-                if (string.IsNullOrWhiteSpace(modGuid))
-                {
-                    ctx.Log.Error("Selected mod has no GUID or Name.");
-                    return;
-                }
-
-                InstanceManifest manifest = GetManifest(instance.Value);
-
-                manifest.Mods ??= new List<string>();
-                if (manifest.Mods.Contains(modGuid, StringComparer.OrdinalIgnoreCase))
-                {
-                    ctx.Log.Error($"Mod already installed: {modGuid}");
-                    return;
-                }
-
-                HandleInstallMod(ctx, (instance.Key, instance.Value), modGuid, reference);
-            }
-            catch (Exception ex)
-            {
-                ctx.Log.Error($"Failed to add mod: {ex.Message}");
-            }
-        }
     }
 }
