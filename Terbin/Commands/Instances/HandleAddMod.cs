@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using Terbin.Data;
 
-namespace Terbin.Commands.Instances
+namespace Terbin.Commands.HandInstances
 {
     /// <summary>
     /// ______( Manejar Agregar Mod )______<br />
