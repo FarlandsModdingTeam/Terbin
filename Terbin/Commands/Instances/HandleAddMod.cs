@@ -145,6 +145,47 @@ namespace Terbin.Commands.HandInstances
             }
         }
 
+
+        /// <summary>
+        /// Maneja la accion de agregar mod.
+        /// </summary>
+        /// <param name="ctx">Contexto para operar</param>
+        /// <param name="instance">instancia (nombre, ruta)</param>
+        /// <param name="mod">nombre del mod</param>
+        private static void HandleUnicAdd(Ctx ctx, KeyValuePair<string, string> instance, string mod)
+        {
+            try
+            {
+                ctx.Log.Info($"Preparing to add mod '{mod}' to instance '{instance.Key}' at '{instance.Value}'.");
+                ctx.Log.Info("Loading mods index...");
+                if (ctx.index == null) ctx.index.webIndex.DownloadIndex();
+                ctx.Log.Success("Mods index loaded.");
+
+                Reference? reference = ctx.index[mod];
+                string? modGuid = reference.GUID;
+                if (string.IsNullOrWhiteSpace(modGuid))
+                {
+                    ctx.Log.Error("Selected mod has no GUID or Name.");
+                    return;
+                }
+
+                InstanceManifest manifest = GetManifest(instance.Value);
+
+                manifest.Mods ??= new List<string>();
+                if (manifest.Mods.Contains(modGuid, StringComparer.OrdinalIgnoreCase))
+                {
+                    ctx.Log.Error($"Mod already installed: {modGuid}");
+                    return;
+                }
+
+                HandleInstallMod(ctx, (instance.Key, instance.Value), modGuid, reference);
+            }
+            catch (Exception ex)
+            {
+                ctx.Log.Error($"Failed to add mod: {ex.Message}");
+            }
+        }
+
         /// <summary>
         /// Maneja la accion de agregar mod.<br />
         /// Comprobando antes que la instancia exista y que el mod no este ya instalado.<br />
@@ -246,45 +287,9 @@ namespace Terbin.Commands.HandInstances
             }
         }
 
-        /// <summary>
-        /// Maneja la accion de agregar mod.
-        /// </summary>
-        /// <param name="ctx">Contexto para operar</param>
-        /// <param name="instance">instancia (nombre, ruta)</param>
-        /// <param name="mod">nombre del mod</param>
-        private static void HandleUnicAdd(Ctx ctx, KeyValuePair<string, string> instance, string mod)
-        {
-            try
-            {
-                ctx.Log.Info($"Preparing to add mod '{mod}' to instance '{instance.Key}' at '{instance.Value}'.");
-                ctx.Log.Info("Loading mods index...");
-                if (ctx.index == null) ctx.index.webIndex.DownloadIndex();
-                ctx.Log.Success("Mods index loaded.");
 
-                Reference? reference = ctx.index[mod];
-                string? modGuid = reference.GUID;
-                if (string.IsNullOrWhiteSpace(modGuid))
-                {
-                    ctx.Log.Error("Selected mod has no GUID or Name.");
-                    return;
-                }
 
-                InstanceManifest manifest = GetManifest(instance.Value);
 
-                manifest.Mods ??= new List<string>();
-                if (manifest.Mods.Contains(modGuid, StringComparer.OrdinalIgnoreCase))
-                {
-                    ctx.Log.Error($"Mod already installed: {modGuid}");
-                    return;
-                }
-
-                HandleInstallMod(ctx, (instance.Key, instance.Value), modGuid, reference);
-            }
-            catch (Exception ex)
-            {
-                ctx.Log.Error($"Failed to add mod: {ex.Message}");
-            }
-        }
 
     }
 }
