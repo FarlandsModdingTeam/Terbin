@@ -41,8 +41,7 @@ public class InsertFarlands : ICommand
                 continue;
             else if (fileName.StartsWith("mscorlib.", StringComparison.OrdinalIgnoreCase))
                 continue;
-            else if (fileName.StartsWith("netstandard.", StringComparison.OrdinalIgnoreCase))
-                continue;
+            
             var destFile = Path.Combine(libsPath, fileName);
             File.Copy(dll, destFile, true);
             copied++;
