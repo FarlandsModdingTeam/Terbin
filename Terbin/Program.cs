@@ -35,7 +35,6 @@ if (File.Exists(configPath))
 ctx.index = new();
 ctx.index.Setup();
 
-
 var commands = new CommandList();
 commands.init();
 
@@ -49,7 +48,7 @@ if (args[0].Trim() == "--it")
         Iteration(arguments);
     }
 }
-if (args[0].Trim() == "--pipe")
+else if (args[0].Trim() == "--pipe")
 {
     bool exitFlag = false;
 
@@ -64,10 +63,8 @@ if (args[0].Trim() == "--pipe")
                 while (!exitFlag)
                 {
                     var arguments = reader.ReadLine().Split(" ");
+                    Iteration(arguments);
                 }
-
-                // TODO: Hacer que los comandos sean compatibles con un writer
-                // writer.WriteLine("Hola Frontend");   // responde
             }
             catch(IOException ex)
             {

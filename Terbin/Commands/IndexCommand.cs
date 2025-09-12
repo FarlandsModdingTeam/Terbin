@@ -10,6 +10,7 @@ public class IndexCommand : ICommand
 
     public void Execution(Ctx ctx, string[] args)
     {
+        //TODO: Agregar checks
         var sub = args[0];
         args = args.Skip(1).ToArray();
 
