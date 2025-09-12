@@ -27,7 +27,7 @@ class RunCommand : ICommand
 
         if (!ctx.config.Instances.ContainsKey(instanceName))
         {
-            new Instances().Execution(ctx, new[] { "create", instanceName, instancePath });
+            new InstancesCommand().Execution(ctx, new[] { "create", instanceName, instancePath });
         }
 
         new Build().Execution(ctx, []);
@@ -52,6 +52,6 @@ class RunCommand : ICommand
             File.Move(dllFile, destinationFile);
         }
 
-        new Instances().Execution(ctx, ["run", instanceName]);
+        new InstancesCommand().Execution(ctx, ["run", instanceName]);
     }
 }

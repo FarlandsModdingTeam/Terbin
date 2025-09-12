@@ -2,12 +2,12 @@
 using System;
 using System.Diagnostics;
 using Terbin.Data;
-using Terbin.Commands.HandInstances;
+using Terbin.Commands.Instances;
 using Index = Terbin.Data.Index;
 
 namespace Terbin.Commands;
 
-public class Instances : ICommand
+public class InstancesCommand : ICommand
 {
     public string Name => "instances";
     public string Description => "Manage game instances: create, list, run";
@@ -21,7 +21,7 @@ public class Instances : ICommand
     private bool laGordaDeTuMadre(string e_url_s)
     {
         return Uri.TryCreate(e_url_s, UriKind.Absolute, out Uri uriResult)
-               && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+            && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
     }
 
 
@@ -40,25 +40,26 @@ public class Instances : ICommand
         }
 
         var sub = args[0].ToLowerInvariant();
+        args = args.Skip(1).ToArray();
         switch (sub)
         {
             case "create":
-                HandleCreate(ctx, args.Skip(1).ToArray());
+                HandleCreate.Create(ctx, args);
                 break;
             case "list":
-                HandleList(ctx);
+                HandleList.List(ctx, args);
                 break;
             case "run":
-                HandleRun(ctx, args.Skip(1).ToArray());
+                HandleRun.Run(ctx, args);
                 break;
             case "open":
-                HandleOpen(ctx, args.Skip(1).ToArray());
+                HandleOpen.Open(ctx, args);
                 break;
             case "delete":
-                HandleDelete(ctx, args.Skip(1).ToArray());
+                HandleDelete.Delete(ctx, args);
                 break;
             case "add":
-                HandleAddMod.HandleAdd(ctx, args.Skip(1).ToArray());
+                HandleAddMod.AddMod(ctx, args);
                 break;
             default:
                 ctx.Log.Error($"Unknown subcommand: {sub}");
@@ -85,344 +86,7 @@ public class Instances : ICommand
         ctx.Log.Info("  - 'add' only records the mod GUID into manifest.json; it does not install files.");
     }
 
-    private static void HandleCreate(Ctx ctx, string[] args)
-    {
-        if (args.Length < 2)
-        {
-            ctx.Log.Warn("Not enough arguments. Usage: terbin instances create <name> <path>");
-            return;
-        }
 
-        var name = args[0];
-        var path = args[1];
-
-        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(path))
-        {
-            ctx.Log.Error("Name and path must be provided.");
-            return;
-        }
-
-        // Require FarlandsPath to be set and exist
-        var src = ctx.config!.FarlandsPath;
-        if (string.IsNullOrWhiteSpace(src) || !Directory.Exists(src))
-        {
-            ctx.Log.Error("Farlands path is not configured or does not exist. Set it with 'terbin config fpath <path>'.");
-            return;
-        }
-
-        // Normalize paths
-        src = Path.GetFullPath(src);
-        var dest = Path.GetFullPath(path);
-
-        if (string.Equals(src, dest, StringComparison.OrdinalIgnoreCase))
-        {
-            ctx.Log.Error("Destination path cannot be the same as the Farlands source path.");
-            return;
-        }
-
-        // Prevent nesting (dest inside src) which would cause infinite recursion
-        if (dest.StartsWith(src + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
-        {
-            ctx.Log.Error("Destination path cannot be inside the Farlands source path.");
-            return;
-        }
-
-        // Disallow creating if there is already an instance at the requested path (registered or detected by manifest)
-        if (ctx.config.Instances.Values.Any(p => string.Equals(Path.GetFullPath(p), dest, StringComparison.OrdinalIgnoreCase)))
-        {
-            ctx.Log.Error($"There is already an instance registered at '{dest}'.");
-            return;
-        }
-
-        // Prepare destination directory
-        if (!Directory.Exists(dest))
-        {
-            Directory.CreateDirectory(dest);
-        }
-        else
-        {
-            // If destination already looks like an instance, abort with error
-            var existingManifest = Path.Combine(dest, "manifest.json");
-            if (File.Exists(existingManifest))
-            {
-                ctx.Log.Error($"Destination '{dest}' already contains an instance (manifest.json found).");
-                return;
-            }
-
-            // If not empty, confirm merge/overwrite
-            var hasAny = Directory.EnumerateFileSystemEntries(dest).Any();
-            if (hasAny)
-            {
-                var ok = ctx.Log.Confirm($"Destination '{dest}' is not empty. Merge and overwrite files?", defaultNo: false);
-                if (!ok)
-                {
-                    ctx.Log.Warn("Aborted by user.");
-                    return;
-                }
-            }
-        }
-
-        try
-        {
-            ctx.Log.Info($"Cloning from '{src}' to '{dest}'...");
-            // Progress bar during clone
-            FileOps.CopyDirectoryWithProgress(src, dest, overwrite: true, (current, total) =>
-            {
-                ProgressUtil.DrawProgressBar(current, total);
-            });
-            // Ensure we end the progress line
-            Console.WriteLine();
-            ctx.Log.Success("Clone completed.");
-
-            // Install BepInEx
-            HandleAddMod.InstallBepInEx(ctx, dest);
-        }
-        catch (Exception ex)
-        {
-            ctx.Log.Error($"Failed to clone files: {ex.Message}");
-            return;
-        }
-
-        if (ctx.config!.Instances.ContainsKey(name))
-        {
-            ctx.Log.Warn($"Instance '{name}' already exists. Updating path.");
-        }
-
-        ctx.config!.Instances[name] = dest;
-        ctx.config.save();
-
-        // Generate instance manifest base
-        try
-        {
-            GenerateInstanceManifest(dest, name);
-            ctx.Log.Success("Instance manifest created.");
-        }
-        catch (Exception mex)
-        {
-            ctx.Log.Warn($"Failed to write instance manifest: {mex.Message}");
-        }
-
-        ctx.Log.Success($"Instance '{name}' created at '{dest}'.");
-    }
-    /// <summary>
-    /// Genera el manifest.json de la instancia.<br />
-    /// sobre escribe todo aquel que exista y pone valores predeterminados:<br />
-    /// Version = "1.0.0"<br />
-    /// Mods = []<br />
-    /// El nombre es el que se le pasa por parámetro.
-    /// </summary>
-    /// <param name="dest">destino donde generar</param>
-    /// <param name="name">nombre del MOD</param>
-    private static void GenerateInstanceManifest(string dest, string name)
-    {
-        var manifestPath = Path.Combine(dest, "manifest.json");
-        var instanceManifest = new InstanceManifest
-        {
-            Name = name,
-            Version = "1.0.0",
-            Mods = new List<string>()
-        };
-        var json = JsonConvert.SerializeObject(instanceManifest, Formatting.Indented);
-        File.WriteAllText(manifestPath, json);
-    }
-
-    private static void HandleList(Ctx ctx)
-    {
-        var items = ctx.config!.Instances.OrderBy(kv => kv.Key, StringComparer.OrdinalIgnoreCase)
-            .Select(kv => $"- {kv.Key}: {kv.Value}");
-        ctx.Log.Box("Instances", items);
-    }
-
-    private static void HandleRun(Ctx ctx, string[] args)
-    {
-        if (args.Length < 1)
-        {
-            ctx.Log.Warn("Usage: terbin instances run <name> [exe]");
-            return;
-        }
-
-        var name = args[0];
-        if (!ctx.config!.Instances.TryGetValue(name, out var basePath))
-        {
-            ctx.Log.Error($"Instance not found: {name}");
-            return;
-        }
-
-        string? exeArg = args.Length >= 2 ? args[1] : null;
-
-        string exePath;
-        if (!string.IsNullOrWhiteSpace(exeArg))
-        {
-            exePath = Path.IsPathRooted(exeArg) ? exeArg : Path.Combine(basePath, exeArg);
-        }
-        else
-        {
-            exePath = Path.Combine(basePath, "Farlands.exe");
-        }
-
-        if (!File.Exists(exePath))
-        {
-            ctx.Log.Error($"Executable not found: {exePath}");
-            return;
-        }
-
-        try
-        {
-            var psi = new ProcessStartInfo
-            {
-                FileName = exePath,
-                WorkingDirectory = basePath,
-                UseShellExecute = true
-            };
-            Process.Start(psi);
-            ctx.Log.Success($"Launched '{name}' -> {exePath}");
-        }
-        catch (Exception ex)
-        {
-            ctx.Log.Error($"Failed to start process: {ex.Message}");
-        }
-    }
-
-    private static void HandleDelete(Ctx ctx, string[] args)
-    {
-        if (args.Length < 1)
-        {
-            ctx.Log.Warn("Usage: terbin instances delete <name> [-y]");
-            return;
-        }
-
-        bool autoYes = args.Any(a => string.Equals(a, "-y", StringComparison.OrdinalIgnoreCase) || string.Equals(a, "--yes", StringComparison.OrdinalIgnoreCase));
-        // First non-flag argument is treated as the instance name
-        var name = args.FirstOrDefault(a => !a.StartsWith("-")) ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            ctx.Log.Warn("Usage: terbin instances delete <name> [-y]");
-            return;
-        }
-
-        if (ctx.config == null)
-        {
-            ctx.Log.Error("Config not loaded.");
-            return;
-        }
-
-        if (!ctx.config.Instances.TryGetValue(name, out var path))
-        {
-            ctx.Log.Error($"Instance not found: {name}");
-            return;
-        }
-
-        if (!autoYes)
-        {
-            var ok = ctx.Log.Confirm($"Remove instance '{name}' from config? Files will not be deleted. Path: '{path}'.", defaultNo: true);
-            if (!ok)
-            {
-                ctx.Log.Info("Cancelled.");
-                return;
-            }
-        }
-
-        ctx.config.Instances.Remove(name);
-        ctx.config.save();
-        ctx.Log.Success($"Instance '{name}' removed.");
-    }
-
-    private static void HandleOpen(Ctx ctx, string[] args)
-    {
-        if (args.Length < 1)
-        {
-            ctx.Log.Warn("Usage: terbin instances open <name> [subpath]");
-            return;
-        }
-
-        var name = args[0];
-        if (!ctx.config!.Instances.TryGetValue(name, out var basePath))
-        {
-            ctx.Log.Error($"Instance not found: {name}");
-            return;
-        }
-
-        string target = basePath;
-        if (args.Length >= 2 && !string.IsNullOrWhiteSpace(args[1]))
-        {
-            var sub = args[1];
-            target = Path.IsPathRooted(sub) ? sub : Path.Combine(basePath, sub);
-        }
-
-        target = Path.GetFullPath(target);
-
-        // If target doesn't exist, try parent if it's a file path; otherwise warn
-        bool isDir = Directory.Exists(target);
-        bool isFile = File.Exists(target);
-
-        if (!isDir && !isFile)
-        {
-            ctx.Log.Error($"Path not found: {target}");
-            return;
-        }
-
-        try
-        {
-            if (OperatingSystem.IsWindows())
-            {
-                if (isFile)
-                {
-                    // Reveal file in Explorer
-                    var psi = new ProcessStartInfo
-                    {
-                        FileName = "explorer.exe",
-                        Arguments = $"/select,\"{target}\"",
-                        UseShellExecute = true
-                    };
-                    Process.Start(psi);
-                }
-                else
-                {
-                    var psi = new ProcessStartInfo
-                    {
-                        FileName = "explorer.exe",
-                        Arguments = $"\"{target}\"",
-                        UseShellExecute = true
-                    };
-                    Process.Start(psi);
-                }
-            }
-            else if (OperatingSystem.IsMacOS())
-            {
-                var psi = new ProcessStartInfo
-                {
-                    FileName = "open",
-                    Arguments = isFile ? $"-R \"{target}\"" : $"\"{target}\"",
-                    UseShellExecute = true
-                };
-                Process.Start(psi);
-            }
-            else if (OperatingSystem.IsLinux())
-            {
-                var toOpen = isFile ? Path.GetDirectoryName(target)! : target;
-                var psi = new ProcessStartInfo
-                {
-                    FileName = "xdg-open",
-                    Arguments = $"\"{toOpen}\"",
-                    UseShellExecute = true
-                };
-                Process.Start(psi);
-            }
-            else
-            {
-                // Fallback: try opening directly
-                var toOpen = isFile ? Path.GetDirectoryName(target)! : target;
-                var psi = new ProcessStartInfo { FileName = toOpen, UseShellExecute = true };
-                Process.Start(psi);
-            }
-
-            ctx.Log.Success($"Opened: {target}");
-        }
-        catch (Exception ex)
-        {
-            ctx.Log.Error($"Failed to open: {ex.Message}");
-        }
-    }
 }
 
 internal static class FileOps

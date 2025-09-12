@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using Terbin.Data;
 
-namespace Terbin.Commands.HandInstances
+namespace Terbin.Commands.Instances
 {
     /// <summary>
     /// ______( Manejar Agregar Mod )______<br />
@@ -192,7 +192,7 @@ namespace Terbin.Commands.HandInstances
         /// </summary>
         /// <param name="ctx">Contexto para operar</param>
         /// <param name="args">[nombre de la Instancia, nombre del mod]</param>
-        public static void HandleAdd(Ctx ctx, string[] args)
+        public static void AddMod(Ctx ctx, string[] args)
         {
             if (args.Length < 2)
             {
