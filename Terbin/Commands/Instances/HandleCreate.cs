@@ -49,7 +49,7 @@ internal class HandleCreate
         }
 
         // Disallow creating if there is already an instance at the requested path (registered or detected by manifest)
-        if (ctx.config.Instances.Values.Any(p => string.Equals(Path.GetFullPath(p), dest, StringComparison.OrdinalIgnoreCase)))
+        if (ctx.config.ExistInstanceInPath(dest))
         {
             ctx.Log.Error($"There is already an instance registered at '{dest}'.");
             return;
@@ -104,13 +104,12 @@ internal class HandleCreate
             return;
         }
 
-        if (ctx.config!.Instances.ContainsKey(name))
+        if (ctx.config!.HasInstance(name))
         {
             ctx.Log.Warn($"Instance '{name}' already exists. Updating path.");
         }
 
-        ctx.config!.Instances[name] = dest;
-        ctx.config.save();
+        ctx.config!.AddInstance(name, dest);
 
         // Generate instance manifest base
         try

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Terbin.Commands;
 
-public class Completion : ICommand
+public class CompletionCommand : ICommand
 {
     public string Name => "completion";
     public string Description => "Outputs or installs PowerShell tab-completion for Terbin commands (Tab suggests commands).";

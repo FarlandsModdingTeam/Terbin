@@ -7,8 +7,8 @@ namespace Terbin.Data;
 
 public class Index
 {
-    public WebIndex webIndex;
-    public LocalIndex localIndex;
+    public WebIndex webIndex = new();
+    public LocalIndex localIndex = new();
 
     public Reference? Get(string reference)
     {
@@ -24,25 +24,11 @@ public class Index
         localIndex = new();
         webIndex = new();
 
-        if (!localIndex.ExistLocalPath)
-        {
-            localIndex.references = new();
-            localIndex.Save();
-        }
-        else
-        {
-            localIndex.LoadFromLocal();
-        }
+        if (!localIndex.ExistLocalPath) localIndex.Init();
+        else localIndex.LoadFromLocal();
 
-        if (!webIndex.ExistLocalPath)
-        {
-            webIndex.DownloadIndex();
-            webIndex.Save();
-        }
-        else
-        {
-            webIndex.LoadFromLocal();
-        }
+        if (!webIndex.ExistLocalPath) webIndex.DownloadIndex();
+        else webIndex.LoadFromLocal();
     }
 
     public void LoadFromLocal()
@@ -62,6 +48,12 @@ public abstract class BasicIndex
     public bool ExistLocalPath => File.Exists(LocalPath);
 
     public List<Reference> references = new();
+
+    public void Init()
+    {
+        references = new();
+        Save();
+    }
 
     public Reference? Get(string reference)
     {
@@ -103,6 +95,8 @@ public class WebIndex : BasicIndex
     {
         var indexJson = NetUtil.DownloadString(indexUrl);
         references = JsonConvert.DeserializeObject<List<Reference>>(indexJson);
+
+        Save();
     }
 
 }
@@ -114,5 +108,6 @@ public class LocalIndex : BasicIndex
     public void AddReference(Reference reference)
     {
         references.Add(reference);
+        Save();
     }
 }

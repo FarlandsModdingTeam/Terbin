@@ -76,7 +76,7 @@ public class ManifestDialog
                 Type = empty ? ProjectManifest.ManifestType.EMPTY : ProjectManifest.ManifestType.NORMAL,
                 GUID = guid!,
                 Versions = new System.Collections.Generic.List<string> { version! },
-                url = url!,
+                URL = url!,
                 Dependencies = empty ? [] : ["fm.fcm"]
             };
 

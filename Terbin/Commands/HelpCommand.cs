@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace Terbin.Commands;
 
-public class Help : ICommand
+public class HelpCommand : ICommand
 {
     public string Name => "help";
     public string Description => "Shows general help or details for a specific command (help <command>).";

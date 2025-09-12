@@ -25,7 +25,7 @@ internal class HandleDelete
             return;
         }
 
-        if (!ctx.config.Instances.TryGetValue(name, out var path))
+        if (!ctx.config.TryGetInstance(name, out var path))
         {
             ctx.Log.Error($"Instance not found: {name}");
             return;
@@ -41,8 +41,7 @@ internal class HandleDelete
             }
         }
 
-        ctx.config.Instances.Remove(name);
-        ctx.config.save();
+        ctx.config.RemoveInstance(name);
         ctx.Log.Success($"Instance '{name}' removed.");
 
     }

@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Terbin.Commands;
 
-public class Build : ICommand
+public class BuildCommand : ICommand
 {
     public string Name => "build";
     public string Description => "Generates plugin.cs from manifest and runs 'dotnet build'";

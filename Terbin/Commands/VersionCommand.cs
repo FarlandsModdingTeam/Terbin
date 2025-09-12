@@ -5,14 +5,15 @@ using Newtonsoft.Json;
 
 namespace Terbin.Commands;
 
-public class Version : ICommand
+
+public class VersionCommand : ICommand
 {
     public string Name => "version";
     public string Description => "Shows, lists, or sets the mod version (uses the latest entry in Versions).";
 
     public void Execution(Ctx ctx, string[] args)
     {
-    ctx.Log.Info("Version");
+        ctx.Log.Info("Version");
 
         if (ctx.manifest == null || string.IsNullOrWhiteSpace(ctx.manifestPath) || !File.Exists(ctx.manifestPath))
         {
@@ -36,7 +37,7 @@ public class Version : ICommand
             ctx.Log.Info($"Current: {Current()}");
             return;
         }
-    if (string.Equals(sub, "list", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(sub, "list", StringComparison.OrdinalIgnoreCase))
         {
             if (versions.Count == 0)
             {
@@ -133,7 +134,7 @@ public class Version : ICommand
             return;
         }
         // If reaches here, unrecognized args
-    ctx.Log.Warn("Usage: version show | version list | version upgrade [major|minor|patch|<newVersion>] | version downgrade");
+        ctx.Log.Warn("Usage: version show | version list | version upgrade [major|minor|patch|<newVersion>] | version downgrade");
         ctx.Log.Info($"Current: {Current()}");
     }
 

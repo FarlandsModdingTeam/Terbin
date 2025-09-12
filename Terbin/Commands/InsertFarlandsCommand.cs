@@ -2,7 +2,7 @@ using System;
 
 namespace Terbin.Commands;
 
-public class InsertFarlands : ICommand
+public class InsertFarlandsCommand : ICommand
 {
     public string Name => "inf";
 

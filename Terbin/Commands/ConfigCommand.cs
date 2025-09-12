@@ -1,6 +1,6 @@
 namespace Terbin.Commands;
 
-public class Config : ICommand
+public class ConfigCommand : ICommand
 {
     public string Name => "config";
 

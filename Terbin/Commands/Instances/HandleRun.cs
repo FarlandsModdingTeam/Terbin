@@ -13,7 +13,7 @@ internal class HandleRun
         }
 
         var name = args[0];
-        if (!ctx.config!.Instances.TryGetValue(name, out var basePath))
+        if (!ctx.config!.TryGetInstance(name, out var basePath))
         {
             ctx.Log.Error($"Instance not found: {name}");
             return;

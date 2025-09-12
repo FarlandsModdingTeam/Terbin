@@ -14,9 +14,9 @@ class RunCommand : ICommand
             return;
         }
 
-        if (ctx.config == null || ctx.config.Instances == null)
+        if (ctx.config == null)
         {
-            ctx.Log.Error("Config or Instances is null");
+            ctx.Log.Error("Config is null");
             return;
         }
 
@@ -25,12 +25,12 @@ class RunCommand : ICommand
         string buildPath = Path.Combine(Environment.CurrentDirectory, "bin", "Debug", "net45");
         string targetPath = Path.Combine(instancePath, "BepInEx", "plugins", ctx.manifest.Name);
 
-        if (!ctx.config.Instances.ContainsKey(instanceName))
+        if (!ctx.config.HasInstance(instanceName))
         {
             new InstancesCommand().Execution(ctx, new[] { "create", instanceName, instancePath });
         }
 
-        new Build().Execution(ctx, []);
+        new BuildCommand().Execution(ctx, []);
 
         // Ensure the target directory exists
         if (!Directory.Exists(targetPath))

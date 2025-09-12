@@ -31,7 +31,7 @@ namespace Terbin.Commands.Instances
                 ctx.Log.Info($"Downloading {mod.Name}... :: {dest}");
                 var manifesJson = NetUtil.DownloadString(mod.manifestUrl);
                 var manifest = JsonConvert.DeserializeObject<ProjectManifest>(manifesJson);
-                var url = Path.Combine(manifest.url, $"releases/download/v{manifest.Versions.Last()}/{manifest.Name}.zip");
+                var url = Path.Combine(manifest.URL, $"releases/download/v{manifest.Versions.Last()}/{manifest.Name}.zip");
                 NetUtil.DownloadFileWithProgress(url, dest);
                 Console.WriteLine("");
             }
@@ -152,6 +152,7 @@ namespace Terbin.Commands.Instances
         /// <param name="ctx">Contexto para operar</param>
         /// <param name="instance">instancia (nombre, ruta)</param>
         /// <param name="mod">nombre del mod</param>
+        //! SE MODIFICA INDEX
         private static void HandleUnicAdd(Ctx ctx, KeyValuePair<string, string> instance, string mod)
         {
             try
@@ -206,7 +207,7 @@ namespace Terbin.Commands.Instances
                 ctx.Log.Error("Config not loaded.");
                 return;
             }
-            if (!ctx.config.Instances.TryGetValue(key, out var instPath))
+            if (!ctx.config.TryGetInstance(key, out var instPath))
             {
                 ctx.Log.Error($"Instance not found: {key}");
                 return;
@@ -286,10 +287,5 @@ namespace Terbin.Commands.Instances
                 ctx.Log.Success($"Added mod GUID to manifest: {modGuid}");
             }
         }
-
-
-
-
-
     }
 }

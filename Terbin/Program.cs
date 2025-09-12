@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices.Marshalling;
+﻿using System.IO.Pipes;
+using System.Net.Security;
+using System.Runtime.InteropServices.Marshalling;
 using Newtonsoft.Json;
 using Terbin;
 using Terbin.Data;
@@ -7,9 +9,8 @@ using Index = Terbin.Data.Index;
 // Carga contexto
 var ctx = new Ctx();
 
-var manifestPath = Path.Combine(Environment.CurrentDirectory, "manifest.json");
 var dotTerbin = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".terbin");
-var configPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".terbin/config.json");
+var configPath = Config.configPath;
 
 if (!Directory.Exists(dotTerbin))
 {
@@ -17,10 +18,10 @@ if (!Directory.Exists(dotTerbin))
 }
 
 // Carga Manifest local
-ctx.existManifest = File.Exists(manifestPath);
+ctx.existManifest = File.Exists(ProjectManifest.ManifestPath);
 if (ctx.existManifest)
 {
-    ctx.manifest = JsonConvert.DeserializeObject<ProjectManifest>(File.ReadAllText(manifestPath));
+    ctx.manifest = JsonConvert.DeserializeObject<ProjectManifest>(File.ReadAllText(ProjectManifest.ManifestPath));
 }
 
 // Carga configuración
@@ -38,23 +39,64 @@ ctx.index.Setup();
 var commands = new CommandList();
 commands.init();
 
-if (args.Length < 1)
+if (args[0].Trim() == "--it")
 {
-
-    commands["help"](ctx, Array.Empty<string>());
-    return;
+    string[] arguments = [""];
+    while (arguments.Length < 0 || arguments[0].Trim() != "exit")
+    {
+        Console.Write("> ");
+        arguments = Console.ReadLine().Split(" ");
+        Iteration(arguments);
+    }
 }
-
-
-var raw = args[0];
-string cmdToken = raw;
-if (raw.StartsWith("--"))
+if (args[0].Trim() == "--pipe")
 {
-    cmdToken = raw.Substring(2);
-}
-else if (raw.StartsWith("-"))
-{
-    cmdToken = raw.Substring(1);
-}
+    bool exitFlag = false;
 
-commands[cmdToken](ctx, args.Skip(1).ToArray());
+    using (var pipe = new NamedPipeServerStream("terbin", PipeDirection.InOut))
+    {
+        pipe.WaitForConnection();
+        using (var reader = new StreamReader(pipe))
+        using (var write = new StreamWriter(pipe) { AutoFlush = true })
+        {
+            try
+            {
+                while (!exitFlag)
+                {
+                    var arguments = reader.ReadLine().Split(" ");
+                }
+
+                // TODO: Hacer que los comandos sean compatibles con un writer
+                // writer.WriteLine("Hola Frontend");   // responde
+            }
+            catch(IOException ex)
+            {
+                ctx.Log.Error("Error de comunicación: " + ex.Message);
+            }
+        }
+
+    }
+}
+else Iteration(args);
+
+void Iteration(string[] args)
+{
+    if (args.Length < 1)
+    {
+        commands["help"](ctx, Array.Empty<string>());
+        return;
+    }
+
+    var raw = args[0];
+    string cmdToken = raw;
+    if (raw.StartsWith("--"))
+    {
+        cmdToken = raw.Substring(2);
+    }
+    else if (raw.StartsWith("-"))
+    {
+        cmdToken = raw.Substring(1);
+    }
+
+    commands[cmdToken](ctx, args.Skip(1).ToArray());
+}

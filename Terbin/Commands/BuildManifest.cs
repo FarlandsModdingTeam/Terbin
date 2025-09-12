@@ -297,13 +297,13 @@ class BuildManifest : ICommand
         {
             throw new Exception($"No versions found in manifest for {reference.Name} ({reference.GUID})");
         }
-        if (string.IsNullOrWhiteSpace(manifest.url))
+        if (string.IsNullOrWhiteSpace(manifest.URL))
         {
             throw new Exception($"Invalid base url in manifest for {reference.Name} ({reference.GUID})");
         }
 
         var latestVersion = manifest.Versions.Last();
-        var baseUrl = manifest.url.TrimEnd('/');
+        var baseUrl = manifest.URL.TrimEnd('/');
         var guid = reference.GUID;
         var downloadUrl = $"{baseUrl}/releases/download/v{latestVersion}/{guid}.zip";
 

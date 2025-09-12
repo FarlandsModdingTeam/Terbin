@@ -6,7 +6,7 @@ using Terbin.Data;
 
 namespace Terbin.Commands;
 
-public class SetupAll : ICommand
+public class SetupCommand : ICommand
 {
     public string Name => "setup";
     public string Description => "Runs all main steps to prepare the mod";
@@ -20,11 +20,11 @@ public class SetupAll : ICommand
         if (ctx.config == null || string.IsNullOrWhiteSpace(ctx.config.FarlandsPath))
         {
             ctx.Log.Info("Step: config fpath");
-            new Config().Execution(ctx, new[] { "fpath" });
+            new ConfigCommand().Execution(ctx, new[] { "fpath" });
             // Reload config from disk to ensure the latest values are in context
-            if (ctx.config != null && File.Exists(ctx.config.configPath))
+            if (ctx.config != null && File.Exists(Config.configPath))
             {
-                var cfgJson = File.ReadAllText(ctx.config.configPath);
+                var cfgJson = File.ReadAllText(Config.configPath);
                 var reloaded = JsonConvert.DeserializeObject<Terbin.Config>(cfgJson);
                 if (reloaded != null) ctx.config = reloaded;
             }
@@ -57,7 +57,7 @@ public class SetupAll : ICommand
 
         // 4. Inf
         ctx.Log.Info("Step: inf");
-        new InsertFarlands().Execution(ctx, Array.Empty<string>());
+        new InsertFarlandsCommand().Execution(ctx, Array.Empty<string>());
 
         // 5. Bman
         ctx.Log.Info("Step: bman");

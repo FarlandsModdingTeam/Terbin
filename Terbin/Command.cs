@@ -46,7 +46,7 @@ class CommandList
     public void init()
     {
         commands = new List<ICommand>();
-        register(typeof(Terbin.Commands.SetupAll));
+        register(typeof(Terbin.Commands.SetupCommand));
 
         Assembly.GetExecutingAssembly()
             .GetTypes()
