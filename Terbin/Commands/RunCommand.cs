@@ -6,31 +6,31 @@ class RunCommand : ICommand
 
     public string Description => "Execute a debug instance with the mod downloaded";
 
-    public void Execution(Ctx ctx, string[] args)
+    public void Execution(string[] args)
     {
-        if (!ctx.existManifest || ctx.manifest == null)
+        if (!Ctx.existManifest || Ctx.manifest == null)
         {
-            ctx.Log.Error("No exist manifest or manifest is null");
+            Ctx.Log.Error("No exist manifest or manifest is null");
             return;
         }
 
-        if (ctx.config == null)
+        if (Ctx.config == null)
         {
-            ctx.Log.Error("Config is null");
+            Ctx.Log.Error("Config is null");
             return;
         }
 
-        string instanceName = $"debug_{ctx.manifest.GUID}";
+        string instanceName = $"debug_{Ctx.manifest.GUID}";
         string instancePath = Path.Combine(Environment.CurrentDirectory, ".Instance");
         string buildPath = Path.Combine(Environment.CurrentDirectory, "bin", "Debug", "net45");
-        string targetPath = Path.Combine(instancePath, "BepInEx", "plugins", ctx.manifest.Name);
+        string targetPath = Path.Combine(instancePath, "BepInEx", "plugins", Ctx.manifest.Name);
 
-        if (!ctx.config.HasInstance(instanceName))
+        if (!Ctx.config.HasInstance(instanceName))
         {
-            new InstancesCommand().Execution(ctx, new[] { "create", instanceName, instancePath });
+            new InstancesCommand().Execution(["create", instanceName, instancePath]);
         }
 
-        new BuildCommand().Execution(ctx, []);
+        new BuildCommand().Execution([]);
 
         // Ensure the target directory exists
         if (!Directory.Exists(targetPath))
@@ -52,6 +52,6 @@ class RunCommand : ICommand
             File.Move(dllFile, destinationFile);
         }
 
-        new InstancesCommand().Execution(ctx, ["run", instanceName]);
+        new InstancesCommand().Execution(["run", instanceName]);
     }
 }

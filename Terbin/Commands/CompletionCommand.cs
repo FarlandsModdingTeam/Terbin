@@ -11,9 +11,9 @@ public class CompletionCommand : ICommand
     public string Name => "completion";
     public string Description => "Outputs or installs PowerShell tab-completion for Terbin commands (Tab suggests commands).";
 
-    public void Execution(Ctx ctx, string[] args)
+    public void Execution(string[] args)
     {
-    ctx.Log.Info("Completion setup");
+        Ctx.Log.Info("Completion setup");
 
         // Discover all command names via reflection
         var commands = Assembly.GetExecutingAssembly()
@@ -47,9 +47,9 @@ public class CompletionCommand : ICommand
 
         if (!install)
         {
-            ctx.Log.Info("Copy and run the following in PowerShell to enable completion for the current session:");
-            ctx.Log.Box("Script", new[]{ psScript });
-            ctx.Log.Info("Or run: terbin completion --install to add it to your PowerShell profile.");
+            Ctx.Log.Info("Copy and run the following in PowerShell to enable completion for the current session:");
+            Ctx.Log.Box("Script", new[] { psScript });
+            Ctx.Log.Info("Or run: terbin completion --install to add it to your PowerShell profile.");
             return;
         }
 
@@ -69,19 +69,19 @@ public class CompletionCommand : ICommand
             {
                 content += banner + Environment.NewLine + psScript + Environment.NewLine + "# --- End Terbin completion ---" + Environment.NewLine;
                 File.WriteAllText(profilePath, content, Encoding.UTF8);
-                ctx.Log.Success($"Completion installed to: {profilePath}");
-                ctx.Log.Info("Restart PowerShell (or re-dot your profile) to activate.");
+                Ctx.Log.Success($"Completion installed to: {profilePath}");
+                Ctx.Log.Info("Restart PowerShell (or re-dot your profile) to activate.");
             }
             else
             {
-                ctx.Log.Info("Completion already present in your profile.");
-                ctx.Log.Info($"Profile: {profilePath}");
+                Ctx.Log.Info("Completion already present in your profile.");
+                Ctx.Log.Info($"Profile: {profilePath}");
             }
         }
         catch (Exception ex)
         {
-            ctx.Log.Error($"Failed to install completion: {ex.Message}");
-            ctx.Log.Info("You can still copy the script above and run it in your current session.");
+            Ctx.Log.Error($"Failed to install completion: {ex.Message}");
+            Ctx.Log.Info("You can still copy the script above and run it in your current session.");
         }
     }
 }

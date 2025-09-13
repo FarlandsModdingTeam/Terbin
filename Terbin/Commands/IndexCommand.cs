@@ -8,7 +8,7 @@ public class IndexCommand : ICommand
 
     public string Description => "Manage index";
 
-    public void Execution(Ctx ctx, string[] args)
+    public void Execution(string[] args)
     {
         //TODO: Agregar checks
         var sub = args[0];
@@ -17,7 +17,7 @@ public class IndexCommand : ICommand
         switch (sub)
         {
             case "update":
-                ctx.index.webIndex.DownloadIndex();
+                Ctx.index.webIndex.DownloadIndex();
                 break;
         }
     }

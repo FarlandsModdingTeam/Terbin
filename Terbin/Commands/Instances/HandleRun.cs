@@ -4,18 +4,18 @@ namespace Terbin.Commands.Instances;
 
 internal class HandleRun
 {
-    public static void Run(Ctx ctx, string[] args)
+    public static void Run(string[] args)
     {
         if (args.Length < 1)
         {
-            ctx.Log.Warn("Usage: terbin instances run <name> [exe]");
+            Ctx.Log.Warn("Usage: terbin instances run <name> [exe]");
             return;
         }
 
         var name = args[0];
-        if (!ctx.config!.TryGetInstance(name, out var basePath))
+        if (!Ctx.config!.TryGetInstance(name, out var basePath))
         {
-            ctx.Log.Error($"Instance not found: {name}");
+            Ctx.Log.Error($"Instance not found: {name}");
             return;
         }
 
@@ -33,7 +33,7 @@ internal class HandleRun
 
         if (!File.Exists(exePath))
         {
-            ctx.Log.Error($"Executable not found: {exePath}");
+            Ctx.Log.Error($"Executable not found: {exePath}");
             return;
         }
 
@@ -46,11 +46,11 @@ internal class HandleRun
                 UseShellExecute = true
             };
             Process.Start(psi);
-            ctx.Log.Success($"Launched '{name}' -> {exePath}");
+            Ctx.Log.Success($"Launched '{name}' -> {exePath}");
         }
         catch (Exception ex)
         {
-            ctx.Log.Error($"Failed to start process: {ex.Message}");
+            Ctx.Log.Error($"Failed to start process: {ex.Message}");
         }
 
     }

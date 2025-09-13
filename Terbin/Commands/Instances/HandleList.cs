@@ -6,16 +6,16 @@ namespace Terbin.Commands.Instances;
 // * Checks comprobados
 internal class HandleList
 {
-    public static void List(Ctx ctx, string[] args)
+    public static void List(string[] args)
     {
-        if (Checkers.IsConfigUnloaded(ctx)) return;
+        if (Checkers.IsConfigUnloaded()) return;
 
-        var items = ctx.config!.GetInstances().OrderBy(kv => kv.Key, StringComparer.OrdinalIgnoreCase)
+        var items = Ctx.config!.GetInstances().OrderBy(kv => kv.Key, StringComparer.OrdinalIgnoreCase)
             .Select(kv => $"- {kv.Key}: {kv.Value}");
 
-        ctx.Log.Box("Instances", items);
+        Ctx.Log.Box("Instances", items);
 
         //? Debería tener ordenación? Cúal?
-        ctx.PipeWrite(ctx.config!.GetInstances(), StatusCode.OK);
+        Ctx.PipeWrite(Ctx.config!.GetInstances(), StatusCode.OK);
     }
 }

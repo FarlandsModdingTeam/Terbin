@@ -18,7 +18,7 @@ class CommandList
         }
     }
 
-    public Action<Ctx, string[]> getExecution(string cmd)
+    public Action<string[]> getExecution(string cmd)
     {
         if (aliases.TryGetValue(cmd, out var canonical))
         {
@@ -27,20 +27,20 @@ class CommandList
         var found = commands.FirstOrDefault(c => c.Name.Equals(cmd, StringComparison.OrdinalIgnoreCase));
         if (found == null)
         {
-            return (ctx, _) =>
+            return (_) =>
             {
-                ctx.Log.Error($"Unknown command: {cmd}");
-                ctx.Log.Info("Available commands (use 'terbin help <command>' for details):");
+                Ctx.Log.Error($"Unknown command: {cmd}");
+                Ctx.Log.Info("Available commands (use 'terbin help <command>' for details):");
                 foreach (var c in commands.OrderBy(c => c.Name))
                 {
-                    ctx.Log.Info($"  {c.Name} - {c.Description}");
+                    Ctx.Log.Info($"  {c.Name} - {c.Description}");
                 }
             };
         }
         return found.Execution;
     }
 
-    public Action<Ctx, string[]> this[string cmd] => getExecution(cmd);
+    public Action<string[]> this[string cmd] => getExecution(cmd);
 
 
     public void init()
@@ -87,5 +87,5 @@ interface ICommand
     /// </summary>
     /// <param name="ctx">Contexto necesario para operar</param>
     /// <param name="args">Valores pasado por comando</param>
-    void Execution(Ctx ctx, string[] args);
+    void Execution(string[] args);
 }

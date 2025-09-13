@@ -25,57 +25,57 @@ public class InstancesCommand : ICommand
             && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
     }
 
-    public void Execution(Ctx ctx, string[] args)
+    public void Execution(string[] args)
     {
-        if (Checkers.IsConfigUnloaded(ctx)) return;
+        if (Checkers.IsConfigUnloaded()) return;
 
-        if (Checkers.IsArgumentsEmpty(ctx, args)) return;
+        if (Checkers.IsArgumentsEmpty(args)) return;
 
         var sub = args[0].ToLowerInvariant();
         args = args.Skip(1).ToArray();
         switch (sub)
         {
             case "create":
-                HandleCreate.Create(ctx, args);
+                HandleCreate.Create(args);
                 break;
             case "list":
-                HandleList.List(ctx, args);
+                HandleList.List(args);
                 break;
             case "run":
-                HandleRun.Run(ctx, args);
+                HandleRun.Run(args);
                 break;
             case "open":
-                HandleOpen.Open(ctx, args);
+                HandleOpen.Open(args);
                 break;
             case "delete":
-                HandleDelete.Delete(ctx, args);
+                HandleDelete.Delete(args);
                 break;
             case "add":
-                HandleAddMod.AddMod(ctx, args);
+                HandleAddMod.AddMod(args);
                 break;
             default:
-                ctx.Log.Error($"Unknown subcommand: {sub}");
-                PrintUsage(ctx);
+                Ctx.Log.Error($"Unknown subcommand: {sub}");
+                PrintUsage();
                 break;
         }
     }
 
-    private static void PrintUsage(Ctx ctx)
+    private static void PrintUsage()
     {
-        ctx.Log.Info("Usage:");
-        ctx.Log.Info("  terbin instances create <name> <path>");
-        ctx.Log.Info("  terbin instances list");
-        ctx.Log.Info("  terbin instances run <name> [exe]");
-        ctx.Log.Info("  terbin instances open <name> [subpath]");
-        ctx.Log.Info("  terbin --instances open <name> [subpath]");
-        ctx.Log.Info("  terbin instances delete <name> [-y]");
-        ctx.Log.Info("  terbin instances add <name> <guid|name>");
-        ctx.Log.Info("");
-        ctx.Log.Info("Notes:");
-        ctx.Log.Info("  - <path> is the folder for the instance.");
-        ctx.Log.Info("  - [exe] optional relative or absolute path to the game executable; defaults to 'Farlands.exe' inside the instance folder.");
-        ctx.Log.Info("  - [subpath] optional folder or file to reveal/open; relative paths are resolved inside the instance.");
-        ctx.Log.Info("  - 'add' only records the mod GUID into manifest.json; it does not install files.");
+        Ctx.Log.Info("Usage:");
+        Ctx.Log.Info("  terbin instances create <name> <path>");
+        Ctx.Log.Info("  terbin instances list");
+        Ctx.Log.Info("  terbin instances run <name> [exe]");
+        Ctx.Log.Info("  terbin instances open <name> [subpath]");
+        Ctx.Log.Info("  terbin --instances open <name> [subpath]");
+        Ctx.Log.Info("  terbin instances delete <name> [-y]");
+        Ctx.Log.Info("  terbin instances add <name> <guid|name>");
+        Ctx.Log.Info("");
+        Ctx.Log.Info("Notes:");
+        Ctx.Log.Info("  - <path> is the folder for the instance.");
+        Ctx.Log.Info("  - [exe] optional relative or absolute path to the game executable; defaults to 'Farlands.exe' inside the instance folder.");
+        Ctx.Log.Info("  - [subpath] optional folder or file to reveal/open; relative paths are resolved inside the instance.");
+        Ctx.Log.Info("  - 'add' only records the mod GUID into manifest.json; it does not install files.");
     }
 
 

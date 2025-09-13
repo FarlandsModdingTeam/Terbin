@@ -8,33 +8,33 @@ class GenerateProject : ICommand
 
     public string Description => "This command is used to generate a new project";
 
-    public void Execution(Ctx ctx, string[] args)
+    public void Execution(string[] args)
     {
         // lightweight log; section header not needed
-        ctx.Log.Info("Generating project...");
+        Ctx.Log.Info("Generating project...");
 
-        if (ctx.manifest == null)
+        if (Ctx.manifest == null)
         {
-            ctx.Log.Error("No manifest loaded. Create one with 'manifest' before generating a project.");
+            Ctx.Log.Error("No manifest loaded. Create one with 'manifest' before generating a project.");
             return;
         }
 
-        var projectPath = Path.Combine(Environment.CurrentDirectory, $"{ctx.manifest.Name}.csproj");
+        var projectPath = Path.Combine(Environment.CurrentDirectory, $"{Ctx.manifest.Name}.csproj");
         if (File.Exists(projectPath))
         {
-            ctx.Log.Warn($"A project already exists: {ctx.manifest.Name}.csproj");
+            Ctx.Log.Warn($"A project already exists: {Ctx.manifest.Name}.csproj");
             return;
         }
 
-        var modVersion = (ctx.manifest.Versions != null && ctx.manifest.Versions.Count > 0)
-            ? ctx.manifest.Versions[^1]
+        var modVersion = (Ctx.manifest.Versions != null && Ctx.manifest.Versions.Count > 0)
+            ? Ctx.manifest.Versions[^1]
             : "0.0.0";
 
         var csproj = $"""
         <Project Sdk="Microsoft.NET.Sdk">
             <PropertyGroup>
                 <TargetFramework>net45</TargetFramework>
-                <AssemblyName>{ctx.manifest.Name}</AssemblyName>
+                <AssemblyName>{Ctx.manifest.Name}</AssemblyName>
                 <Product>Mod created using Terbin</Product>
                 <Version>{modVersion}</Version>
                 <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -44,7 +44,7 @@ class GenerateProject : ICommand
                 https://nuget.bepinex.dev/v3/index.json;
                 https://nuget.samboy.dev/v3/index.json
                 </RestoreAdditionalProjectSources>
-                <RootNamespace>{ctx.manifest.Name}</RootNamespace>
+                <RootNamespace>{Ctx.manifest.Name}</RootNamespace>
             </PropertyGroup>
 
             <ItemGroup>
@@ -76,7 +76,7 @@ class GenerateProject : ICommand
         var restorePsi = new ProcessStartInfo
         {
             FileName = "dotnet",
-            Arguments = $"restore \"{ctx.manifest.Name}.csproj\"",
+            Arguments = $"restore \"{Ctx.manifest.Name}.csproj\"",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -88,9 +88,9 @@ class GenerateProject : ICommand
             string output = process?.StandardOutput.ReadToEnd() ?? "";
             string error = process?.StandardError.ReadToEnd() ?? "";
             process?.WaitForExit();
-            if (!string.IsNullOrWhiteSpace(output)) ctx.Log.Info(output.Trim());
-            if (!string.IsNullOrWhiteSpace(error)) ctx.Log.Warn(error.Trim());
+            if (!string.IsNullOrWhiteSpace(output)) Ctx.Log.Info(output.Trim());
+            if (!string.IsNullOrWhiteSpace(error)) Ctx.Log.Warn(error.Trim());
         }
-        ctx.Log.Success($"Project generated: {projectPath}");
+        Ctx.Log.Success($"Project generated: {projectPath}");
     }
 }

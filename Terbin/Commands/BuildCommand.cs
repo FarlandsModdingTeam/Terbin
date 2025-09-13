@@ -8,23 +8,23 @@ public class BuildCommand : ICommand
     public string Name => "build";
     public string Description => "Generates plugin.cs from manifest and runs 'dotnet build'";
 
-    public void Execution(Ctx ctx, string[] args)
+    public void Execution(string[] args)
     {
-    ctx.Log.Info("Build started...");
+        Ctx.Log.Info("Build started...");
 
         // 1) Generate plugin.cs from manifest
-        new BuildManifest().Execution(ctx, Array.Empty<string>());
+        new BuildManifest().Execution(Array.Empty<string>());
 
         // Ensure we have a manifest and corresponding project file
-        if (ctx.manifest == null)
+        if (Ctx.manifest == null)
         {
-            ctx.Log.Error("No manifest loaded. Create one with 'manifest' and 'gen' before building.");
+            Ctx.Log.Error("No manifest loaded. Create one with 'manifest' and 'gen' before building.");
             return;
         }
-        var projectPath = Path.Combine(Environment.CurrentDirectory, $"{ctx.manifest.Name}.csproj");
+        var projectPath = Path.Combine(Environment.CurrentDirectory, $"{Ctx.manifest.Name}.csproj");
         if (!File.Exists(projectPath))
         {
-            ctx.Log.Error($"Project file not found: {projectPath}. Run 'gen' first.");
+            Ctx.Log.Error($"Project file not found: {projectPath}. Run 'gen' first.");
             return;
         }
 
@@ -44,16 +44,16 @@ public class BuildCommand : ICommand
         string stderr = proc?.StandardError.ReadToEnd() ?? string.Empty;
         proc?.WaitForExit();
 
-        if (!string.IsNullOrWhiteSpace(stdout)) ctx.Log.Info(stdout.Trim());
-        if (!string.IsNullOrWhiteSpace(stderr)) ctx.Log.Warn(stderr.Trim());
+        if (!string.IsNullOrWhiteSpace(stdout)) Ctx.Log.Info(stdout.Trim());
+        if (!string.IsNullOrWhiteSpace(stderr)) Ctx.Log.Warn(stderr.Trim());
 
         if (proc?.ExitCode == 0)
         {
-            ctx.Log.Success("Build completed successfully.");
+            Ctx.Log.Success("Build completed successfully.");
         }
         else
         {
-            ctx.Log.Error($"Build failed with exit code {proc?.ExitCode}.");
+            Ctx.Log.Error($"Build failed with exit code {proc?.ExitCode}.");
         }
     }
 }

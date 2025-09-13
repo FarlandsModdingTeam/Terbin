@@ -6,27 +6,27 @@ using Index = Terbin.Data.Index;
 
 namespace Terbin;
 
-public class Ctx
+public static class Ctx
 {
-    public bool existManifest;
-    public ProjectManifest? manifest;
-    public string? manifestPath;
+    public static bool existManifest;
+    public static ProjectManifest? manifest;
+    public static string? manifestPath;
 
-    public Config? config;
-    public Index? index;
+    public static Config? config;
+    public static Index? index;
 
-    public Logger Log { get; } = new Logger();
+    public static Logger Log { get; } = new Logger();
 
-    public StreamWriter? Writter;
+    public static StreamWriter? Writter;
 
     #region  PipeWritters
-    public void PipeWrite(object data, StatusCode code, string message = "")
+    public static void PipeWrite(object data, StatusCode code, string message = "")
     {
         if (Writter == null) return;
 
         PipeWrite(data, (int)code, message);
     }
-    public void PipeWrite(object data, int code, string message = "")
+    public static void PipeWrite(object data, int code, string message = "")
     {
         if (Writter == null) return;
 
@@ -37,7 +37,7 @@ public class Ctx
         });
     }
 
-    public void PipeWrite(object data, StatusResponse status)
+    public static void PipeWrite(object data, StatusResponse status)
     {
         if (Writter == null) return;
         PipeWrite(new Response()
@@ -47,13 +47,13 @@ public class Ctx
         });
     }
 
-    public void PipeWrite(object data)
+    public static void PipeWrite(object data)
     {
         if (Writter == null) return;
         PipeWrite(JsonConvert.SerializeObject(data));
     }
 
-    public void PipeWrite(string data)
+    public static void PipeWrite(string data)
     {
         if (Writter == null) return;
 

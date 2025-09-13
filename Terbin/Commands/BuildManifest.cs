@@ -12,65 +12,65 @@ class BuildManifest : ICommand
 
     public string Description => "This command creates the plugin file based on manifest file";
 
-    public void Execution(Ctx ctx, string[] args)
+    public void Execution(string[] args)
     {
-        ctx.Log.Info("Generating plugin file...");
+        Ctx.Log.Info("Generating plugin file...");
 
-        if (!ctx.existManifest || ctx.manifest == null)
+        if (!Ctx.existManifest || Ctx.manifest == null)
         {
-            ctx.Log.Error("Manifest file does not exist or couldn't be read. Aborting generation.");
+            Ctx.Log.Error("Manifest file does not exist or couldn't be read. Aborting generation.");
             return;
         }
 
         // Basic manifest validations
-        if (string.IsNullOrWhiteSpace(ctx.manifest.Name))
+        if (string.IsNullOrWhiteSpace(Ctx.manifest.Name))
         {
-            ctx.Log.Error("Manifest Name is missing or empty.");
+            Ctx.Log.Error("Manifest Name is missing or empty.");
             return;
         }
-        if (string.IsNullOrWhiteSpace(ctx.manifest.GUID))
+        if (string.IsNullOrWhiteSpace(Ctx.manifest.GUID))
         {
-            ctx.Log.Error("Manifest GUID is missing or empty.");
-            return;
-        }
-
-        if (ctx.manifest.Type == ProjectManifest.ManifestType.EMPTY)
-        {
-            executeEmpty(ctx, ctx.manifest);
+            Ctx.Log.Error("Manifest GUID is missing or empty.");
             return;
         }
 
-        var modVersion = (ctx.manifest.Versions != null && ctx.manifest.Versions.Count > 0)
-            ? ctx.manifest.Versions[^1]
+        if (Ctx.manifest.Type == ProjectManifest.ManifestType.EMPTY)
+        {
+            executeEmpty( Ctx.manifest);
+            return;
+        }
+
+        var modVersion = (Ctx.manifest.Versions != null && Ctx.manifest.Versions.Count > 0)
+            ? Ctx.manifest.Versions[^1]
             : "0.0.0";
-        ctx.Log.Info($"Using version: {modVersion}");
+        Ctx.Log.Info($"Using version: {modVersion}");
 
         // Prepare dependency attributes and download libs
         var dependencyAttributes = new StringBuilder();
-        var deps = ctx.manifest.Dependencies ?? new List<string>();
+        var deps = Ctx.manifest.Dependencies ?? new List<string>();
         if (deps.Count == 0)
         {
-            ctx.Log.Warn("No dependencies declared in the manifest.");
+            Ctx.Log.Warn("No dependencies declared in the manifest.");
         }
         else
         {
-            if (ctx.config == null)
+            if (Ctx.config == null)
             {
-                ctx.Log.Warn("Config not loaded. Skipping dependencies import.");
+                Ctx.Log.Warn("Config not loaded. Skipping dependencies import.");
             }
-            else if (ctx.index == null)
+            else if (Ctx.index == null)
             {
-                ctx.Log.Warn("Config index not available. Skipping dependencies import.");
+                Ctx.Log.Warn("Config index not available. Skipping dependencies import.");
             }
             else
             {
-                ctx.Log.Section("Resolving dependencies");
+                Ctx.Log.Section("Resolving dependencies");
                 int added = 0, failed = 0;
                 foreach (var d in deps)
                 {
                     if (string.IsNullOrWhiteSpace(d))
                     {
-                        ctx.Log.Warn("Encountered empty dependency id. Skipping.");
+                        Ctx.Log.Warn("Encountered empty dependency id. Skipping.");
                         failed++;
                         continue;
                     }
@@ -79,38 +79,38 @@ class BuildManifest : ICommand
                     try
                     {
                         // Access using indexer as per existing contract. If missing, catch and warn.
-                        reference = ctx.index[d];
+                        reference = Ctx.index[d];
                     }
                     catch
                     {
-                        ctx.Log.Warn($"Dependency '{d}' not found in index. Skipping.");
+                        Ctx.Log.Warn($"Dependency '{d}' not found in index. Skipping.");
                         failed++;
                         continue;
                     }
 
                     if (reference == null)
                     {
-                        ctx.Log.Warn($"Dependency '{d}' resolved to null reference. Skipping.");
+                        Ctx.Log.Warn($"Dependency '{d}' resolved to null reference. Skipping.");
                         failed++;
                         continue;
                     }
 
-                    ctx.Log.Info($"Processing dependency '{d}' ({reference.Name ?? "<no-name>"})...");
+                    Ctx.Log.Info($"Processing dependency '{d}' ({reference.Name ?? "<no-name>"})...");
                     try
                     {
-                        downloadLib(ctx, reference);
+                        downloadLib(reference);
                         dependencyAttributes.AppendLine($"[BepInDependency(\"{d}\")]");
-                        ctx.Log.Success($"Dependency '{d}' imported successfully.");
+                        Ctx.Log.Success($"Dependency '{d}' imported successfully.");
                         added++;
                     }
                     catch (Exception ex)
                     {
-                        ctx.Log.Error($"Failed to import dependency '{d}': {ex.Message}");
+                        Ctx.Log.Error($"Failed to import dependency '{d}': {ex.Message}");
                         failed++;
                     }
                 }
 
-                ctx.Log.Info($"Dependencies processed. Added: {added}, Failed/Skipped: {failed}.");
+                Ctx.Log.Info($"Dependencies processed. Added: {added}, Failed/Skipped: {failed}.");
             }
         }
 
@@ -119,10 +119,10 @@ class BuildManifest : ICommand
         using BepInEx.Logging;
         using HarmonyLib;
 
-        namespace {{ctx.manifest.Name}};
+        namespace {{Ctx.manifest.Name}};
         
-        [BepInPlugin("{{ctx.manifest.GUID}}", "{{ctx.manifest.Name}}", "{{modVersion}}")]
-        {{dependencyAttributes.ToString()}}public class {{ctx.manifest.Name}}Plugin : BaseUnityPlugin
+        [BepInPlugin("{{Ctx.manifest.GUID}}", "{{Ctx.manifest.Name}}", "{{modVersion}}")]
+        {{dependencyAttributes.ToString()}}public class {{Ctx.manifest.Name}}Plugin : BaseUnityPlugin
         {
             internal static new ManualLogSource Logger;
             public Harmony harmony;
@@ -131,9 +131,9 @@ class BuildManifest : ICommand
             {
                 // Plugin startup logic
                 Logger = base.Logger;
-                Logger.LogInfo($"Plugin '{{ctx.manifest.GUID}}' is loaded!");
+                Logger.LogInfo($"Plugin '{{Ctx.manifest.GUID}}' is loaded!");
 
-                harmony = new Harmony("{{ctx.manifest.GUID}}");
+                harmony = new Harmony("{{Ctx.manifest.GUID}}");
                 harmony.PatchAll();
 
                 Logger.LogInfo("Patches applied");
@@ -148,9 +148,9 @@ class BuildManifest : ICommand
         using BepInEx.Logging;
         using FarlandsCoreMod;
 
-        namespace {{ctx.manifest.Name}};
+        namespace {{Ctx.manifest.Name}};
         
-        public class {{ctx.manifest.Name}}Mod : Mod
+        public class {{Ctx.manifest.Name}}Mod : Mod
         {
             public void Start()
             {
@@ -173,15 +173,15 @@ class BuildManifest : ICommand
 
             if(!File.Exists(modPath)) File.WriteAllText(modPath, mod);
 
-            ctx.Log.Success($"Plugin generated successfully at: {outputPath}");
+            Ctx.Log.Success($"Plugin generated successfully at: {outputPath}");
         }
         catch (Exception ex)
         {
-            ctx.Log.Error($"Failed to write plugin file: {ex.Message}");
+            Ctx.Log.Error($"Failed to write plugin file: {ex.Message}");
         }
     }
 
-    private void executeEmpty(Ctx ctx, ProjectManifest manifest)
+    private void executeEmpty(ProjectManifest manifest)
     {
         var pluginInfo = $$"""
         using BepInEx;
@@ -200,11 +200,11 @@ class BuildManifest : ICommand
         try
         {
             File.WriteAllText(pluginInfoPath, pluginInfo);
-            ctx.Log.Success($"Plugin info generated successfully at: {pluginInfoPath}");
+            Ctx.Log.Success($"Plugin info generated successfully at: {pluginInfoPath}");
         }
         catch (Exception ex)
         {
-            ctx.Log.Error($"Failed to write plugin file: {ex.Message}");
+            Ctx.Log.Error($"Failed to write plugin file: {ex.Message}");
             return;
         }
         var pluginPath = Path.Combine(Environment.CurrentDirectory, "Plugin.cs");
@@ -216,7 +216,7 @@ class BuildManifest : ICommand
                 using BepInEx.Logging;
                 using HarmonyLib;
 
-                namespace {{ctx.manifest.Name}};
+                namespace {{Ctx.manifest.Name}};
                 
                 [BepInPlugin(PluginInfo.GUID, PluginInfo.Name, PluginInfo.Version)]
                 public class Plugin : BaseUnityPlugin
@@ -228,7 +228,7 @@ class BuildManifest : ICommand
                     {
                         // Plugin startup logic
                         Logger = base.Logger;
-                        Logger.LogInfo($"Plugin '{{ctx.manifest.GUID}}' is loaded!");
+                        Logger.LogInfo($"Plugin '{{Ctx.manifest.GUID}}' is loaded!");
 
                         harmony = new Harmony(PluginInfo.GUID);
                         harmony.PatchAll();
@@ -241,18 +241,18 @@ class BuildManifest : ICommand
             try
             {
                 File.WriteAllText(pluginPath, plugin);
-                ctx.Log.Success($"Plugin generated successfully at: {pluginPath}");
+                Ctx.Log.Success($"Plugin generated successfully at: {pluginPath}");
             }
             catch (Exception ex)
             {
-                ctx.Log.Error($"Failed to write plugin file: {ex.Message}");
+                Ctx.Log.Error($"Failed to write plugin file: {ex.Message}");
                 return;
             }
         }
 
     }
 
-    private void downloadLib(Ctx ctx, Reference reference)
+    private void downloadLib(Reference reference)
     {
         // Validate reference fields
         if (reference == null)
@@ -268,7 +268,7 @@ class BuildManifest : ICommand
             throw new Exception($"Manifest URL missing for {reference.Name ?? reference.GUID}.");
         }
 
-        ctx.Log.Info($"Downloading manifest for {reference.Name ?? reference.GUID} from {reference.manifestUrl}...");
+        Ctx.Log.Info($"Downloading manifest for {reference.Name ?? reference.GUID} from {reference.manifestUrl}...");
         string manifestJson;
         try
         {
@@ -311,7 +311,7 @@ class BuildManifest : ICommand
         var zipPath = Path.Combine(libsDir, $"{guid}.zip");
         Directory.CreateDirectory(libsDir);
 
-        ctx.Log.Info($"Downloading {guid} v{latestVersion} from {downloadUrl}...");
+        Ctx.Log.Info($"Downloading {guid} v{latestVersion} from {downloadUrl}...");
         try
         {
             NetUtil.DownloadFileWithProgress(downloadUrl, zipPath);
@@ -323,7 +323,7 @@ class BuildManifest : ICommand
             throw new Exception($"Failed to download dependency archive: {ex.Message}");
         }
 
-        ctx.Log.Info($"Extracting {guid} to '{libsDir}'...");
+        Ctx.Log.Info($"Extracting {guid} to '{libsDir}'...");
         try
         {
             ZipFile.ExtractToDirectory(zipPath, libsDir, true);
@@ -337,6 +337,6 @@ class BuildManifest : ICommand
             try { if (File.Exists(zipPath)) File.Delete(zipPath); } catch { /* ignore */ }
         }
 
-        ctx.Log.Success($"{guid} v{latestVersion} installed.");
+        Ctx.Log.Success($"{guid} v{latestVersion} installed.");
     }
 }

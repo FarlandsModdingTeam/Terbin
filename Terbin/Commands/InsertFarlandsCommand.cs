@@ -8,27 +8,27 @@ public class InsertFarlandsCommand : ICommand
 
     public string Description => "Insert farlands libraries";
 
-    public void Execution(Ctx ctx, string[] args)
+    public void Execution(string[] args)
     {
-        if (ctx.config == null)
+        if (Ctx.config == null)
         {
-            ctx.Log.Error("No config loaded. Please initialize configuration first.");
+            Ctx.Log.Error("No config loaded. Please initialize configuration first.");
             return;
         }
 
-    if (string.IsNullOrWhiteSpace(ctx.config.FarlandsPath))
-    {
-        ctx.Log.Error("Farlands path is not configured. Use: config fpath <path>");
-        return;
-    }
+        if (string.IsNullOrWhiteSpace(Ctx.config.FarlandsPath))
+        {
+            Ctx.Log.Error("Farlands path is not configured. Use: config fpath <path>");
+            return;
+        }
 
-    var managedPath = Path.Combine(ctx.config.FarlandsPath!, "Farlands_Data", "Managed");
+        var managedPath = Path.Combine(Ctx.config.FarlandsPath!, "Farlands_Data", "Managed");
         var libsPath = Path.Combine(Environment.CurrentDirectory, "libs");
         Directory.CreateDirectory(libsPath);
 
         if (!Directory.Exists(managedPath))
         {
-            ctx.Log.Error($"Managed folder not found: {managedPath}");
+            Ctx.Log.Error($"Managed folder not found: {managedPath}");
             return;
         }
 
@@ -41,11 +41,11 @@ public class InsertFarlandsCommand : ICommand
                 continue;
             else if (fileName.StartsWith("mscorlib.", StringComparison.OrdinalIgnoreCase))
                 continue;
-            
+
             var destFile = Path.Combine(libsPath, fileName);
             File.Copy(dll, destFile, true);
             copied++;
         }
-    ctx.Log.Success($"Copied {copied} DLLs from Managed to libs (excluding System.*).");
+        Ctx.Log.Success($"Copied {copied} DLLs from Managed to libs (excluding System.*).");
     }
 }

@@ -5,57 +5,57 @@ namespace Terbin.Commands;
 
 public static class Checkers
 {
-    public static bool IsConfigUnloaded(Ctx ctx, string msg = "Config not loaded.")
+    public static bool IsConfigUnloaded(string msg = "Config not loaded.")
     {
-        var res = ctx.config == null;
+        var res = Ctx.config == null;
         if (res)
         {
-            ctx.Log.Error(msg);
-            ctx.PipeWrite(null, StatusCode.BAD_REQUEST, msg);
+            Ctx.Log.Error(msg);
+            Ctx.PipeWrite(null, StatusCode.BAD_REQUEST, msg);
         }
 
         return res;
     }
 
-    public static bool IsArgumentsEmpty(Ctx ctx, string[] args, string msg = "No arguments")
+    public static bool IsArgumentsEmpty(string[] args, string msg = "No arguments")
     {
-        return HasNotEnoughArgs(ctx, args, 1, msg);
+        return HasNotEnoughArgs(args, 1, msg);
     }
 
-    public static bool HasNotEnoughArgs(Ctx ctx, string[] args, int number, string msg = "Not enough arguments")
+    public static bool HasNotEnoughArgs(string[] args, int number, string msg = "Not enough arguments")
     {
         var res = args.Length < number;
         if (res)
         {
-            ctx.Log.Error(msg);
-            ctx.PipeWrite(null, StatusCode.BAD_REQUEST, msg);
+            Ctx.Log.Error(msg);
+            Ctx.PipeWrite(null, StatusCode.BAD_REQUEST, msg);
 
         }
 
         return res;
     }
 
-    public static bool IsNullOrWhiteSpace(Ctx ctx, string str, string msg = "Empty string")
+    public static bool IsNullOrWhiteSpace(string str, string msg = "Empty string")
     {
         var res = string.IsNullOrWhiteSpace(str);
 
         if (res)
         {
-            ctx.Log.Error(msg);
-            ctx.PipeWrite(null, StatusCode.BAD_REQUEST, msg);
+            Ctx.Log.Error(msg);
+            Ctx.PipeWrite(null, StatusCode.BAD_REQUEST, msg);
         }
 
         return res;
     }
 
-    public static bool NotExistingDirectory(Ctx ctx, string path, string msg = "Not existing directory")
+    public static bool NotExistingDirectory( string path, string msg = "Not existing directory")
     {
         var res = Directory.Exists(path);
 
         if (res)
         {
-            ctx.Log.Error(msg);
-            ctx.PipeWrite(null, StatusCode.BAD_REQUEST, msg);
+            Ctx.Log.Error(msg);
+            Ctx.PipeWrite(null, StatusCode.BAD_REQUEST, msg);
         }
 
         return res;

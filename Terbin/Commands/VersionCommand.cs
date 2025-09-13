@@ -11,40 +11,40 @@ public class VersionCommand : ICommand
     public string Name => "version";
     public string Description => "Shows, lists, or sets the mod version (uses the latest entry in Versions).";
 
-    public void Execution(Ctx ctx, string[] args)
+    public void Execution(string[] args)
     {
-        ctx.Log.Info("Version");
+        Ctx.Log.Info("Version");
 
-        if (ctx.manifest == null || string.IsNullOrWhiteSpace(ctx.manifestPath) || !File.Exists(ctx.manifestPath))
+        if (Ctx.manifest == null || string.IsNullOrWhiteSpace(ctx.manifestPath) || !File.Exists(ctx.manifestPath))
         {
-            ctx.Log.Error("No manifest loaded. Create one with 'manifest' first.");
+            Ctx.Log.Error("No manifest loaded. Create one with 'manifest' first.");
             return;
         }
 
-        var versions = ctx.manifest.Versions ?? new System.Collections.Generic.List<string>();
+        var versions = Ctx.manifest.Versions ?? new System.Collections.Generic.List<string>();
         string Current() => versions.Count > 0 ? versions[^1] : "<none>";
 
         if (args.Length == 0)
         {
-            ctx.Log.Warn("Usage: version show | version list | version upgrade [major|minor|patch|<newVersion>] | version downgrade");
-            ctx.Log.Info($"Current: {Current()}");
+            Ctx.Log.Warn("Usage: version show | version list | version upgrade [major|minor|patch|<newVersion>] | version downgrade");
+            Ctx.Log.Info($"Current: {Current()}");
             return;
         }
 
         var sub = args[0].Trim();
         if (string.Equals(sub, "show", StringComparison.OrdinalIgnoreCase))
         {
-            ctx.Log.Info($"Current: {Current()}");
+            Ctx.Log.Info($"Current: {Current()}");
             return;
         }
         if (string.Equals(sub, "list", StringComparison.OrdinalIgnoreCase))
         {
             if (versions.Count == 0)
             {
-                ctx.Log.Info("No versions found.");
+                Ctx.Log.Info("No versions found.");
                 return;
             }
-            ctx.Log.Box("Versions", versions.Select((v, i) => $"{i + 1}. {v}"));
+            Ctx.Log.Box("Versions", versions.Select((v, i) => $"{i + 1}. {v}"));
             return;
         }
 
@@ -53,23 +53,23 @@ public class VersionCommand : ICommand
         {
             if (args.Length > 1)
             {
-                ctx.Log.Error("Downgrade does not take arguments. It removes the last version entry.");
-                ctx.Log.Warn("Usage: version downgrade");
+                Ctx.Log.Error("Downgrade does not take arguments. It removes the last version entry.");
+                Ctx.Log.Warn("Usage: version downgrade");
                 return;
             }
             if (versions.Count == 0)
             {
-                ctx.Log.Info("No versions to remove.");
+                Ctx.Log.Info("No versions to remove.");
                 return;
             }
             var removed = versions[^1];
             versions.RemoveAt(versions.Count - 1);
-            ctx.manifest.Versions = versions;
-            var jsonPop = JsonConvert.SerializeObject(ctx.manifest, Formatting.Indented);
-            File.WriteAllText(ctx.manifestPath!, jsonPop);
-            ctx.Log.Success($"Removed version: {removed}");
-            if (versions.Count > 0) ctx.Log.Info($"Current: {versions[^1]}");
-            else ctx.Log.Info("No versions left.");
+            Ctx.manifest.Versions = versions;
+            var jsonPop = JsonConvert.SerializeObject(Ctx.manifest, Formatting.Indented);
+            File.WriteAllText(Ctx.manifestPath!, jsonPop);
+            Ctx.Log.Success($"Removed version: {removed}");
+            if (versions.Count > 0) Ctx.Log.Info($"Current: {versions[^1]}");
+            else Ctx.Log.Info("No versions left.");
             return;
         }
 
@@ -82,23 +82,23 @@ public class VersionCommand : ICommand
                 var target = args[1].Trim();
                 if (string.IsNullOrWhiteSpace(target) || target.Contains(' '))
                 {
-                    ctx.Log.Error("Invalid version. It cannot be empty or contain spaces.");
+                    Ctx.Log.Error("Invalid version. It cannot be empty or contain spaces.");
                     return;
                 }
                 if (!target.All(ch => char.IsLetterOrDigit(ch) || ch == '.' || ch == '-' || ch == '_'))
                 {
-                    ctx.Log.Warn("Version contains unusual characters. Allowed: letters, digits, '.', '-', '_'.");
+                    Ctx.Log.Warn("Version contains unusual characters. Allowed: letters, digits, '.', '-', '_'.");
                 }
                 if (versions.Count > 0 && versions[^1] == target)
                 {
-                    ctx.Log.Info($"Version already current: {target}");
+                    Ctx.Log.Info($"Version already current: {target}");
                     return;
                 }
-                ctx.manifest.Versions = versions;
+                Ctx.manifest.Versions = versions;
                 versions.Add(target);
-                var jsonE = JsonConvert.SerializeObject(ctx.manifest, Formatting.Indented);
-                File.WriteAllText(ctx.manifestPath!, jsonE);
-                ctx.Log.Success($"Version set to: {target}");
+                var jsonE = JsonConvert.SerializeObject(Ctx.manifest, Formatting.Indented);
+                File.WriteAllText(Ctx.manifestPath!, jsonE);
+                Ctx.Log.Success($"Version set to: {target}");
                 return;
             }
 
@@ -106,7 +106,7 @@ public class VersionCommand : ICommand
             string level = (args.Length >= 2 ? args[1].Trim().ToLowerInvariant() : "patch");
             if (level != "major" && level != "minor" && level != "patch")
             {
-                ctx.Log.Error("Invalid level. Use: major | minor | patch or provide an explicit version.");
+                Ctx.Log.Error("Invalid level. Use: major | minor | patch or provide an explicit version.");
                 return;
             }
 
@@ -123,19 +123,19 @@ public class VersionCommand : ICommand
             var bumped = $"{M}.{m}.{p}";
             if (versions.Count > 0 && versions[^1] == bumped)
             {
-                ctx.Log.Info($"Version already current: {bumped}");
+                Ctx.Log.Info($"Version already current: {bumped}");
                 return;
             }
-            ctx.manifest.Versions = versions;
+            Ctx.manifest.Versions = versions;
             versions.Add(bumped);
-            var jsonB = JsonConvert.SerializeObject(ctx.manifest, Formatting.Indented);
-            File.WriteAllText(ctx.manifestPath!, jsonB);
-            ctx.Log.Success($"Version set to: {bumped}");
+            var jsonB = JsonConvert.SerializeObject(Ctx.manifest, Formatting.Indented);
+            File.WriteAllText(Ctx.manifestPath!, jsonB);
+            Ctx.Log.Success($"Version set to: {bumped}");
             return;
         }
         // If reaches here, unrecognized args
-        ctx.Log.Warn("Usage: version show | version list | version upgrade [major|minor|patch|<newVersion>] | version downgrade");
-        ctx.Log.Info($"Current: {Current()}");
+        Ctx.Log.Warn("Usage: version show | version list | version upgrade [major|minor|patch|<newVersion>] | version downgrade");
+        Ctx.Log.Info($"Current: {Current()}");
     }
 
     private static (int Major, int Minor, int Patch) ParseVersion(string s)

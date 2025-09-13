@@ -9,22 +9,22 @@ namespace Terbin.Commands.Instances;
 // ! Necesita refactorización
 internal class HandleCreate
 {
-    public static void Create(Ctx ctx, string[] args)
+    public static void Create(string[] args)
     {
-        if (Checkers.HasNotEnoughArgs(ctx, args, 2)) return;
+        if (Checkers.HasNotEnoughArgs(args, 2)) return;
 
         var name = args[0];
         var installPath = args[1];
 
-        if (Checkers.IsNullOrWhiteSpace(ctx, name, "Name must be provided")) return;
-        if (Checkers.IsNullOrWhiteSpace(ctx, installPath, "Path must be provided")) return;
+        if (Checkers.IsNullOrWhiteSpace(name, "Name must be provided")) return;
+        if (Checkers.IsNullOrWhiteSpace(installPath, "Path must be provided")) return;
 
 
         // Require FarlandsPath to be set and exist
-        var fpath = ctx.config!.FarlandsPath;
+        var fpath = Ctx.config!.FarlandsPath;
 
-        if (Checkers.IsNullOrWhiteSpace(ctx, fpath, "Farlands path is not configured")) return;
-        if (Checkers.NotExistingDirectory(ctx, fpath, "Path not exist")) return;
+        if (Checkers.IsNullOrWhiteSpace(fpath, "Farlands path is not configured")) return;
+        if (Checkers.NotExistingDirectory(fpath, "Path not exist")) return;
 
         // Normalize paths
         fpath = Path.GetFullPath(fpath);
@@ -32,25 +32,25 @@ internal class HandleCreate
 
         if (string.Equals(fpath, dest, StringComparison.OrdinalIgnoreCase))
         {
-            ctx.Log.Error("Destination path cannot be the same as the Farlands source path.");
-            ctx.PipeWrite(null, StatusCode.BAD_REQUEST, "Destination path cannot be the same as the Farlands source path.");
+            Ctx.Log.Error("Destination path cannot be the same as the Farlands source path.");
+            Ctx.PipeWrite(null, StatusCode.BAD_REQUEST, "Destination path cannot be the same as the Farlands source path.");
             return;
         }
 
         // Prevent nesting (dest inside src) which would cause infinite recursion
         if (dest.StartsWith(fpath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
         {
-            ctx.Log.Error("Destination path cannot be inside the Farlands source path.");
-            ctx.PipeWrite(null, StatusCode.BAD_REQUEST, "Destination path cannot be inside the Farlands source path.");
+            Ctx.Log.Error("Destination path cannot be inside the Farlands source path.");
+            Ctx.PipeWrite(null, StatusCode.BAD_REQUEST, "Destination path cannot be inside the Farlands source path.");
 
             return;
         }
 
         // Disallow creating if there is already an instance at the requested path (registered or detected by manifest)
-        if (ctx.config.ExistInstanceInPath(dest))
+        if (Ctx.config.ExistInstanceInPath(dest))
         {
-            ctx.Log.Error($"There is already an instance registered at '{dest}'.");
-            ctx.PipeWrite(null, StatusCode.BAD_REQUEST, $"There is already an instance registered at '{dest}'.");
+            Ctx.Log.Error($"There is already an instance registered at '{dest}'.");
+            Ctx.PipeWrite(null, StatusCode.BAD_REQUEST, $"There is already an instance registered at '{dest}'.");
             return;
         }
 
@@ -65,8 +65,8 @@ internal class HandleCreate
             var existingManifest = Path.Combine(dest, "manifest.json");
             if (File.Exists(existingManifest))
             {
-                ctx.Log.Error($"Destination '{dest}' already contains an instance (manifest.json found).");
-                ctx.PipeWrite(null, StatusCode.BAD_REQUEST, $"Destination '{dest}' already contains an instance (manifest.json found).");
+                Ctx.Log.Error($"Destination '{dest}' already contains an instance (manifest.json found).");
+                Ctx.PipeWrite(null, StatusCode.BAD_REQUEST, $"Destination '{dest}' already contains an instance (manifest.json found).");
                 return;
             }
 
@@ -75,10 +75,10 @@ internal class HandleCreate
             if (hasAny)
             {
                 //TODO: Que hacer con esto?
-                var ok = ctx.Log.Confirm($"Destination '{dest}' is not empty. Merge and overwrite files?", defaultNo: false);
+                var ok = Ctx.Log.Confirm($"Destination '{dest}' is not empty. Merge and overwrite files?", defaultNo: false);
                 if (!ok)
                 {
-                    ctx.Log.Warn("Aborted by user.");
+                    Ctx.Log.Warn("Aborted by user.");
                     return;
                 }
             }
@@ -86,7 +86,7 @@ internal class HandleCreate
 
         try
         {
-            ctx.Log.Info($"Cloning from '{fpath}' to '{dest}'...");
+            Ctx.Log.Info($"Cloning from '{fpath}' to '{dest}'...");
             // Progress bar during clone
             FileOps.CopyDirectoryWithProgress(fpath, dest, overwrite: true, (current, total) =>
             {
@@ -94,38 +94,38 @@ internal class HandleCreate
             });
             // Ensure we end the progress line
             Console.WriteLine();
-            ctx.Log.Success("Clone completed.");
+            Ctx.Log.Success("Clone completed.");
 
             // Install BepInEx
-            HandleAddMod.InstallBepInEx(ctx, dest);
+            HandleAddMod.InstallBepInEx(dest);
         }
         catch (Exception ex)
         {
-            ctx.Log.Error($"Failed to clone files: {ex.Message}");
-            ctx.PipeWrite(null, StatusCode.INTERNAL_SERVER_ERROR, $"Failed to clone files: {ex.Message}");
+            Ctx.Log.Error($"Failed to clone files: {ex.Message}");
+            Ctx.PipeWrite(null, StatusCode.INTERNAL_SERVER_ERROR, $"Failed to clone files: {ex.Message}");
             return;
         }
 
-        if (ctx.config!.HasInstance(name))
+        if (Ctx.config!.HasInstance(name))
         {
-            ctx.Log.Warn($"Instance '{name}' already exists. Updating path.");
+            Ctx.Log.Warn($"Instance '{name}' already exists. Updating path.");
         }
 
-        ctx.config!.AddInstance(name, dest);
+        Ctx.config!.AddInstance(name, dest);
 
         // Generate instance manifest base
         try
         {
             GenerateInstanceManifest(dest, name);
-            ctx.Log.Success("Instance manifest created.");
+            Ctx.Log.Success("Instance manifest created.");
         }
         catch (Exception mex)
         {
-            ctx.Log.Warn($"Failed to write instance manifest: {mex.Message}");
+            Ctx.Log.Warn($"Failed to write instance manifest: {mex.Message}");
         }
 
-        ctx.Log.Success($"Instance '{name}' created at '{dest}'.");
-        ctx.PipeWrite(null, StatusCode.OK, $"ok");
+        Ctx.Log.Success($"Instance '{name}' created at '{dest}'.");
+        Ctx.PipeWrite(null, StatusCode.OK, $"ok");
     }
 
     /// <summary>

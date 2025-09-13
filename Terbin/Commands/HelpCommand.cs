@@ -9,7 +9,7 @@ public class HelpCommand : ICommand
     public string Name => "help";
     public string Description => "Shows general help or details for a specific command (help <command>).";
 
-    public void Execution(Ctx ctx, string[] args)
+    public void Execution(string[] args)
     {
         var all = Assembly.GetExecutingAssembly()
             .GetTypes()
@@ -20,18 +20,18 @@ public class HelpCommand : ICommand
 
         if (args.Length == 0)
         {
-            ctx.Log.Section("Help");
-            ctx.Log.Info("Usage:");
-            ctx.Log.Info("  terbin <command> [args]");
-            ctx.Log.Info("  terbin help [command]");
-            ctx.Log.Info("");
-            ctx.Log.Info("Available commands:");
+            Ctx.Log.Section("Help");
+            Ctx.Log.Info("Usage:");
+            Ctx.Log.Info("  terbin <command> [args]");
+            Ctx.Log.Info("  terbin help [command]");
+            Ctx.Log.Info("");
+            Ctx.Log.Info("Available commands:");
             foreach (var c in all)
             {
-                ctx.Log.Info($"  {c.Name} - {c.Description}");
+                Ctx.Log.Info($"  {c.Name} - {c.Description}");
             }
-            ctx.Log.Info("");
-            ctx.Log.Info("Short aliases: e.g. 'terbin -i' for 'terbin instances', 'terbin -h' for help.");
+            Ctx.Log.Info("");
+            Ctx.Log.Info("Short aliases: e.g. 'terbin -i' for 'terbin instances', 'terbin -h' for help.");
             return;
         }
 
@@ -39,15 +39,15 @@ public class HelpCommand : ICommand
         var cmd = all.FirstOrDefault(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
         if (cmd == null)
         {
-            ctx.Log.Error($"Unknown command: {name}");
-            ctx.Log.Info("Run 'terbin help' to see available commands.");
+            Ctx.Log.Error($"Unknown command: {name}");
+            Ctx.Log.Info("Run 'terbin help' to see available commands.");
             return;
         }
 
-    ctx.Log.Section($"Help: {cmd.Name}");
-        ctx.Log.Info(cmd.Description);
-        ctx.Log.Info("Usage:");
-    ctx.Log.Info($"  terbin {cmd.Name} [args]");
-        ctx.Log.Info("Notes: Some commands print usage hints when called without the required arguments.");
+        Ctx.Log.Section($"Help: {cmd.Name}");
+        Ctx.Log.Info(cmd.Description);
+        Ctx.Log.Info("Usage:");
+        Ctx.Log.Info($"  terbin {cmd.Name} [args]");
+        Ctx.Log.Info("Notes: Some commands print usage hints when called without the required arguments.");
     }
 }

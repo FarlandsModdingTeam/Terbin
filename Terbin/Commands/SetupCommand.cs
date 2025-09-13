@@ -11,59 +11,59 @@ public class SetupCommand : ICommand
     public string Name => "setup";
     public string Description => "Runs all main steps to prepare the mod";
 
-    public void Execution(Ctx ctx, string[] args)
+    public void Execution(string[] args)
     {
         // Pass-through flags (e.g., -y/--yes) to sub-commands/dialogs
-        ctx.Log.Section("Setup: full mod preparation");
+        Ctx.Log.Section("Setup: full mod preparation");
 
         // 1. FarlandsPath configuration
-        if (ctx.config == null || string.IsNullOrWhiteSpace(ctx.config.FarlandsPath))
+        if (Ctx.config == null || string.IsNullOrWhiteSpace(Ctx.config.FarlandsPath))
         {
-            ctx.Log.Info("Step: config fpath");
-            new ConfigCommand().Execution(ctx, new[] { "fpath" });
+            Ctx.Log.Info("Step: config fpath");
+            new ConfigCommand().Execution(new[] { "fpath" });
             // Reload config from disk to ensure the latest values are in context
-            if (ctx.config != null && File.Exists(Config.configPath))
+            if (Ctx.config != null && File.Exists(Config.configPath))
             {
                 var cfgJson = File.ReadAllText(Config.configPath);
                 var reloaded = JsonConvert.DeserializeObject<Terbin.Config>(cfgJson);
-                if (reloaded != null) ctx.config = reloaded;
+                if (reloaded != null) Ctx.config = reloaded;
             }
         }
         else
         {
-            ctx.Log.Info($"FarlandsPath already configured: {ctx.config.FarlandsPath}");
+            Ctx.Log.Info($"FarlandsPath already configured: {Ctx.config.FarlandsPath}");
         }
 
         // 2. Manifest
-        ctx.Log.Info("Step: manifest");
+        Ctx.Log.Info("Step: manifest");
         List<string> manifestArgs = ["-y"];
         if (args.Contains("empty")) manifestArgs.Add("-x");
 
-        new ManifestCommand().Execution(ctx, manifestArgs.ToArray());
+        new ManifestCommand().Execution(manifestArgs.ToArray());
         // Reload manifest into context in case it was just created
-        if (!string.IsNullOrWhiteSpace(ctx.manifestPath))
+        if (!string.IsNullOrWhiteSpace(Ctx.manifestPath))
         {
-            ctx.existManifest = File.Exists(ctx.manifestPath);
-            if (ctx.existManifest)
+            Ctx.existManifest = File.Exists(Ctx.manifestPath);
+            if (Ctx.existManifest)
             {
-                var manJson = File.ReadAllText(ctx.manifestPath);
-                ctx.manifest = JsonConvert.DeserializeObject<ProjectManifest>(manJson);
+                var manJson = File.ReadAllText(Ctx.manifestPath);
+                Ctx.manifest = JsonConvert.DeserializeObject<ProjectManifest>(manJson);
             }
         }
 
         // 3. Gen
-        ctx.Log.Info("Step: gen");
-        new GenerateProject().Execution(ctx, []);
+        Ctx.Log.Info("Step: gen");
+        new GenerateProject().Execution([]);
 
         // 4. Inf
-        ctx.Log.Info("Step: inf");
-        new InsertFarlandsCommand().Execution(ctx, Array.Empty<string>());
+        Ctx.Log.Info("Step: inf");
+        new InsertFarlandsCommand().Execution(Array.Empty<string>());
 
         // 5. Bman
-        ctx.Log.Info("Step: bman");
+        Ctx.Log.Info("Step: bman");
 
-        new BuildManifest().Execution(ctx, []);
+        new BuildManifest().Execution([]);
 
-        ctx.Log.Success("Setup complete. Mod ready!");
+        Ctx.Log.Success("Setup complete. Mod ready!");
     }
 }

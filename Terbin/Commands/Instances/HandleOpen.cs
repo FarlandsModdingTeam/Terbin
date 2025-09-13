@@ -4,18 +4,18 @@ namespace Terbin.Commands.Instances;
 
 internal class HandleOpen
 {
-    public static void Open(Ctx ctx, string[] args)
+    public static void Open(string[] args)
     {
         if (args.Length < 1)
         {
-            ctx.Log.Warn("Usage: terbin instances open <name> [subpath]");
+            Ctx.Log.Warn("Usage: terbin instances open <name> [subpath]");
             return;
         }
 
         var name = args[0];
-        if (!ctx.config!.TryGetInstance(name, out var basePath))
+        if (!Ctx.config!.TryGetInstance(name, out var basePath))
         {
-            ctx.Log.Error($"Instance not found: {name}");
+            Ctx.Log.Error($"Instance not found: {name}");
             return;
         }
 
@@ -34,7 +34,7 @@ internal class HandleOpen
 
         if (!isDir && !isFile)
         {
-            ctx.Log.Error($"Path not found: {target}");
+            Ctx.Log.Error($"Path not found: {target}");
             return;
         }
 
@@ -93,11 +93,11 @@ internal class HandleOpen
                 Process.Start(psi);
             }
 
-            ctx.Log.Success($"Opened: {target}");
+            Ctx.Log.Success($"Opened: {target}");
         }
         catch (Exception ex)
         {
-            ctx.Log.Error($"Failed to open: {ex.Message}");
+            Ctx.Log.Error($"Failed to open: {ex.Message}");
         }
 
     }
