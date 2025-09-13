@@ -26,7 +26,7 @@ public class InfoCommand : ICommand
             ManifestPath = ctx.manifestPath,
         };
 
-        ctx.PipeWrite(dto, StatusResponse.OK);
+        ctx.PipeWrite(dto, StatusCode.OK, "ok");
     }
 
     public class InfoDTO

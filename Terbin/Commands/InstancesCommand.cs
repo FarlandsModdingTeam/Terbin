@@ -7,6 +7,7 @@ using Index = Terbin.Data.Index;
 
 namespace Terbin.Commands;
 
+
 public class InstancesCommand : ICommand
 {
     public string Name => "instances";
@@ -18,26 +19,17 @@ public class InstancesCommand : ICommand
     /// </summary>
     /// <param name="e_url_s"></param>
     /// <returns></returns>
-    private bool laGordaDeTuMadre(string e_url_s)
+    private bool validateHttpUrl(string e_url_s)
     {
         return Uri.TryCreate(e_url_s, UriKind.Absolute, out Uri uriResult)
             && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
     }
 
-
     public void Execution(Ctx ctx, string[] args)
     {
-        if (ctx.config == null)
-        {
-            ctx.Log.Error("Config not loaded.");
-            return;
-        }
+        if (Checkers.IsConfigUnloaded(ctx)) return;
 
-        if (args.Length == 0)
-        {
-            PrintUsage(ctx);
-            return;
-        }
+        if (Checkers.IsArgumentsEmpty(ctx, args)) return;
 
         var sub = args[0].ToLowerInvariant();
         args = args.Skip(1).ToArray();

@@ -4,47 +4,45 @@ using Terbin.Data;
 
 namespace Terbin.Commands.Instances;
 
+// * Compatible con Pipe
+// * Checks comprobados
+// ! Necesita refactorización
 internal class HandleCreate
 {
     public static void Create(Ctx ctx, string[] args)
     {
-        if (args.Length < 2)
-        {
-            ctx.Log.Warn("Not enough arguments. Usage: terbin instances create <name> <path>");
-            return;
-        }
+        if (Checkers.HasNotEnoughArgs(ctx, args, 2)) return;
 
         var name = args[0];
-        var path = args[1];
+        var installPath = args[1];
 
-        if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(path))
-        {
-            ctx.Log.Error("Name and path must be provided.");
-            return;
-        }
+        if (Checkers.IsNullOrWhiteSpace(ctx, name, "Name must be provided")) return;
+        if (Checkers.IsNullOrWhiteSpace(ctx, installPath, "Path must be provided")) return;
+
 
         // Require FarlandsPath to be set and exist
-        var src = ctx.config!.FarlandsPath;
-        if (string.IsNullOrWhiteSpace(src) || !Directory.Exists(src))
-        {
-            ctx.Log.Error("Farlands path is not configured or does not exist. Set it with 'terbin config fpath <path>'.");
-            return;
-        }
+        var fpath = ctx.config!.FarlandsPath;
+
+        if (Checkers.IsNullOrWhiteSpace(ctx, fpath, "Farlands path is not configured")) return;
+        if (Checkers.NotExistingDirectory(ctx, fpath, "Path not exist")) return;
 
         // Normalize paths
-        src = Path.GetFullPath(src);
-        var dest = Path.GetFullPath(path);
+        fpath = Path.GetFullPath(fpath);
+        var dest = Path.GetFullPath(installPath);
 
-        if (string.Equals(src, dest, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(fpath, dest, StringComparison.OrdinalIgnoreCase))
         {
             ctx.Log.Error("Destination path cannot be the same as the Farlands source path.");
+            ctx.PipeWrite(null, StatusCode.BAD_REQUEST, "Destination path cannot be the same as the Farlands source path.");
             return;
         }
 
         // Prevent nesting (dest inside src) which would cause infinite recursion
-        if (dest.StartsWith(src + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+        if (dest.StartsWith(fpath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
         {
             ctx.Log.Error("Destination path cannot be inside the Farlands source path.");
+            ctx.PipeWrite(null, StatusCode.BAD_REQUEST, "Destination path cannot be inside the Farlands source path.");
+
             return;
         }
 
@@ -52,6 +50,7 @@ internal class HandleCreate
         if (ctx.config.ExistInstanceInPath(dest))
         {
             ctx.Log.Error($"There is already an instance registered at '{dest}'.");
+            ctx.PipeWrite(null, StatusCode.BAD_REQUEST, $"There is already an instance registered at '{dest}'.");
             return;
         }
 
@@ -67,6 +66,7 @@ internal class HandleCreate
             if (File.Exists(existingManifest))
             {
                 ctx.Log.Error($"Destination '{dest}' already contains an instance (manifest.json found).");
+                ctx.PipeWrite(null, StatusCode.BAD_REQUEST, $"Destination '{dest}' already contains an instance (manifest.json found).");
                 return;
             }
 
@@ -74,6 +74,7 @@ internal class HandleCreate
             var hasAny = Directory.EnumerateFileSystemEntries(dest).Any();
             if (hasAny)
             {
+                //TODO: Que hacer con esto?
                 var ok = ctx.Log.Confirm($"Destination '{dest}' is not empty. Merge and overwrite files?", defaultNo: false);
                 if (!ok)
                 {
@@ -85,9 +86,9 @@ internal class HandleCreate
 
         try
         {
-            ctx.Log.Info($"Cloning from '{src}' to '{dest}'...");
+            ctx.Log.Info($"Cloning from '{fpath}' to '{dest}'...");
             // Progress bar during clone
-            FileOps.CopyDirectoryWithProgress(src, dest, overwrite: true, (current, total) =>
+            FileOps.CopyDirectoryWithProgress(fpath, dest, overwrite: true, (current, total) =>
             {
                 ProgressUtil.DrawProgressBar(current, total);
             });
@@ -101,6 +102,7 @@ internal class HandleCreate
         catch (Exception ex)
         {
             ctx.Log.Error($"Failed to clone files: {ex.Message}");
+            ctx.PipeWrite(null, StatusCode.INTERNAL_SERVER_ERROR, $"Failed to clone files: {ex.Message}");
             return;
         }
 
@@ -123,6 +125,7 @@ internal class HandleCreate
         }
 
         ctx.Log.Success($"Instance '{name}' created at '{dest}'.");
+        ctx.PipeWrite(null, StatusCode.OK, $"ok");
     }
 
     /// <summary>

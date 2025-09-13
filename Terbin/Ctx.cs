@@ -20,7 +20,13 @@ public class Ctx
     public StreamWriter? Writter;
 
     #region  PipeWritters
-    public void PipeWrite(object data, int code, string message)
+    public void PipeWrite(object data, StatusCode code, string message = "")
+    {
+        if (Writter == null) return;
+
+        PipeWrite(data, (int)code, message);
+    }
+    public void PipeWrite(object data, int code, string message = "")
     {
         if (Writter == null) return;
 
