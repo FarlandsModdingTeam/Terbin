@@ -15,7 +15,7 @@ public class VersionCommand : ICommand
     {
         Ctx.Log.Info("Version");
 
-        if (Ctx.manifest == null || string.IsNullOrWhiteSpace(ctx.manifestPath) || !File.Exists(ctx.manifestPath))
+        if (Ctx.manifest == null || string.IsNullOrWhiteSpace(Ctx.manifestPath) || !File.Exists(Ctx.manifestPath))
         {
             Ctx.Log.Error("No manifest loaded. Create one with 'manifest' first.");
             return;
