@@ -20,12 +20,15 @@ public class ProjectManifest
     private string url = "";
     private List<string> dependencies = [];
 
-    public string Name { get => name; set { name = value; Save(); } }
-    public ManifestType Type { get => type; set { type = value; Save(); } }
-    public string GUID { get => guid; set { guid = value; Save(); } }
-    public List<string> Versions { get => versions; set { versions = value; Save(); } }
-    public string URL { get => url; set { url = value; Save(); } }
-    public List<string> Dependencies { get => dependencies; set { dependencies = value; Save(); } }
+    [JsonIgnore] public string Name { get => name; set { name = value; Save(); } }
+
+    [JsonIgnore] public ManifestType Type { get => type; set { type = value; Save(); } }
+
+    [JsonIgnore] public string GUID { get => guid; set { guid = value; Save(); } }
+
+    [JsonIgnore] public List<string> Versions { get => versions; set { versions = value; Save(); } }
+    [JsonIgnore] public string URL { get => url; set { url = value; Save(); } }
+    [JsonIgnore] public List<string> Dependencies { get => dependencies; set { dependencies = value; Save(); } }
     public void Save()
     {
         var json = JsonConvert.SerializeObject(this);
