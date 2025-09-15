@@ -1,25 +1,20 @@
 namespace Terbin.Commands;
 
-class RunCommand : ICommand
+class RunCommand : AbstractCommand
 {
-    public string Name => "run";
+
+    public override string Name => "run";
 
     public string Description => "Execute a debug instance with the mod downloaded";
-
-    public void Execution(string[] args)
+    public bool HasErrors()
     {
-        if (!Ctx.existManifest || Ctx.manifest == null)
-        {
-            Ctx.Log.Error("No exist manifest or manifest is null");
-            return;
-        }
+        if (Checkers.IsManifestNull()) return true;
+        if (Checkers.IsConfigNull()) return true;
 
-        if (Ctx.config == null)
-        {
-            Ctx.Log.Error("Config is null");
-            return;
-        }
-
+        return false;
+    }
+    public override void Execution()
+    {
         string instanceName = $"debug_{Ctx.manifest.GUID}";
         string instancePath = Path.Combine(Environment.CurrentDirectory, ".Instance");
         string buildPath = Path.Combine(Environment.CurrentDirectory, "bin", "Debug", "net45");
@@ -27,10 +22,10 @@ class RunCommand : ICommand
 
         if (!Ctx.config.HasInstance(instanceName))
         {
-            new InstancesCommand().Execution(["create", instanceName, instancePath]);
+            new InstancesCommand().ExecuteCommand(["create", instanceName, instancePath]);
         }
 
-        new BuildCommand().Execution([]);
+        new BuildCommand().ExecuteCommand([]);
 
         // Ensure the target directory exists
         if (!Directory.Exists(targetPath))
@@ -52,6 +47,7 @@ class RunCommand : ICommand
             File.Move(dllFile, destinationFile);
         }
 
-        new InstancesCommand().Execution(["run", instanceName]);
+        new InstancesCommand().ExecuteCommand(["run", instanceName]);
     }
+
 }

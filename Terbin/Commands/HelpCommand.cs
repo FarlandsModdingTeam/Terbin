@@ -4,17 +4,18 @@ using System.Reflection;
 
 namespace Terbin.Commands;
 
-public class HelpCommand : ICommand
+public class HelpCommand : AbstractCommand
 {
-    public string Name => "help";
+
+    public override string Name => "help";
     public string Description => "Shows general help or details for a specific command (help <command>).";
 
-    public void Execution(string[] args)
+    public override void Execution()
     {
         var all = Assembly.GetExecutingAssembly()
             .GetTypes()
-            .Where(t => typeof(ICommand).IsAssignableFrom(t) && !t.IsAbstract && t.GetConstructor(Type.EmptyTypes) != null)
-            .Select(t => (ICommand)Activator.CreateInstance(t)!)
+            .Where(t => typeof(AbstractCommand).IsAssignableFrom(t) && !t.IsAbstract && t.GetConstructor(Type.EmptyTypes) != null)
+            .Select(t => (AbstractCommand)Activator.CreateInstance(t)!)
             .OrderBy(c => c.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
 

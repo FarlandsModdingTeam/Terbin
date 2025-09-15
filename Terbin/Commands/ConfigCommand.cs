@@ -1,26 +1,20 @@
 namespace Terbin.Commands;
 
-public class ConfigCommand : ICommand
+public class ConfigCommand : AbstractCommand
 {
-    public string Name => "config";
+    public override string Name => "config";
 
     public string Description => "Configure local terbin options";
-
-    public void Execution(string[] args)
+    public override bool HasErrors()
     {
-        if (args.Length < 1)
-        {
-            Ctx.Log.Warn("Not enough arguments. Usage: config <module> [value]");
-            return;
-        }
+        if (Checkers.IsArgumentsEmpty(args)) return true;
+        if (Checkers.IsConfigNull()) return true;
 
+        return false;
+    }
+    public override void Execution()
+    {
         string module = args[0];
-
-        if (Ctx.config == null)
-        {
-            Ctx.Log.Error("No config loaded. Please initialize configuration first.");
-            return;
-        }
 
         if (module == "fpath")
         {

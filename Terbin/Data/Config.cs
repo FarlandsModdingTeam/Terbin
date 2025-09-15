@@ -11,7 +11,9 @@ public class Config
     public static string configPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".terbin/config.json");
     private string? farlandsPath;
     // Map of instance name -> path
-    private Dictionary<string, string> instances { get; set; } = new();
+
+    [JsonProperty("Instances")]
+    private Dictionary<string, string> instances = new();
 
     public string? FarlandsPath
     {
@@ -37,6 +39,11 @@ public class Config
     {
         return instances.Values
             .Any(p => string.Equals(Path.GetFullPath(p), path, StringComparison.OrdinalIgnoreCase));
+    }
+
+    public string GetInstancePath(string name)
+    {
+        return instances[name];
     }
 
     public Dictionary<string, string> GetInstances()

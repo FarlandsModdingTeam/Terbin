@@ -2,9 +2,11 @@ using System.Diagnostics;
 
 namespace Terbin.Commands.Instances;
 
-internal class HandleOpen
+internal class HandleOpen : IExecutable
 {
-    public static void Open(string[] args)
+    public override string Section => "INSTANCES OPEN";
+
+    public override void Execution()
     {
         if (args.Length < 1)
         {

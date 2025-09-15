@@ -5,31 +5,24 @@ using Newtonsoft.Json;
 
 namespace Terbin.Commands;
 
-
-public class VersionCommand : ICommand
+//TODO: Mejorar gestión de subcomandos
+public class VersionCommand : AbstractCommand
 {
-    public string Name => "version";
+    public override string Name => "version";
     public string Description => "Shows, lists, or sets the mod version (uses the latest entry in Versions).";
-
-    public void Execution(string[] args)
+    public override bool HasErrors()
     {
-        Ctx.Log.Info("Version");
+        if (Checkers.IsNullOrWhiteSpace(Ctx.manifestPath)) return true;
+        else if (Checkers.IsManifestNull(Ctx.manifestPath)) return true;
+        else if (Checkers.NotExistFile(Ctx.manifestPath)) return true;
+        else if (Checkers.IsArgumentsEmpty(args)) return true;
 
-        if (Ctx.manifest == null || string.IsNullOrWhiteSpace(Ctx.manifestPath) || !File.Exists(Ctx.manifestPath))
-        {
-            Ctx.Log.Error("No manifest loaded. Create one with 'manifest' first.");
-            return;
-        }
-
+        return false;
+    }
+    public override void Execution()
+    {
         var versions = Ctx.manifest.Versions ?? new System.Collections.Generic.List<string>();
-        string Current() => versions.Count > 0 ? versions[^1] : "<none>";
-
-        if (args.Length == 0)
-        {
-            Ctx.Log.Warn("Usage: version show | version list | version upgrade [major|minor|patch|<newVersion>] | version downgrade");
-            Ctx.Log.Info($"Current: {Current()}");
-            return;
-        }
+        string Current() => versions.Count > 0 ? versions[^1] : "<none>"; //TODO siempre debería tener una versión
 
         var sub = args[0].Trim();
         if (string.Equals(sub, "show", StringComparison.OrdinalIgnoreCase))

@@ -1,24 +1,25 @@
 ﻿using System.Reflection;
+using System.Windows.Input;
 
 namespace Terbin;
 
 class CommandList
 {
-    private List<ICommand> commands = new();
+    private List<AbstractCommand> commands = new();
     private readonly Dictionary<string, string> aliases = new(StringComparer.OrdinalIgnoreCase);
     public void register(Type t)
     {
-        if (typeof(ICommand).IsAssignableFrom(t) && !t.IsAbstract && t.GetConstructor(Type.EmptyTypes) != null)
+        if (typeof(AbstractCommand).IsAssignableFrom(t) && !t.IsAbstract && t.GetConstructor(Type.EmptyTypes) != null)
         {
             var obj = Activator.CreateInstance(t);
-            if (obj is ICommand instance)
+            if (obj is AbstractCommand instance)
             {
                 commands.Add(instance);
             }
         }
     }
 
-    public Action<string[]> getExecution(string cmd)
+    public AbstractCommand getExecution(string cmd)
     {
         if (aliases.TryGetValue(cmd, out var canonical))
         {
@@ -27,30 +28,22 @@ class CommandList
         var found = commands.FirstOrDefault(c => c.Name.Equals(cmd, StringComparison.OrdinalIgnoreCase));
         if (found == null)
         {
-            return (_) =>
-            {
-                Ctx.Log.Error($"Unknown command: {cmd}");
-                Ctx.Log.Info("Available commands (use 'terbin help <command>' for details):");
-                foreach (var c in commands.OrderBy(c => c.Name))
-                {
-                    Ctx.Log.Info($"  {c.Name} - {c.Description}");
-                }
-            };
+            return null;
         }
-        return found.Execution;
+        return found;
     }
 
-    public Action<string[]> this[string cmd] => getExecution(cmd);
+    public AbstractCommand this[string cmd] => getExecution(cmd);
 
 
     public void init()
     {
-        commands = new List<ICommand>();
-        register(typeof(Terbin.Commands.SetupCommand));
+        commands = new List<AbstractCommand>();
+        // register(typeof(Terbin.Commands.SetupCommand));
 
         Assembly.GetExecutingAssembly()
             .GetTypes()
-            .Where(t => t.IsAssignableTo(typeof(ICommand)))
+            .Where(t => t.IsAssignableTo(typeof(AbstractCommand)))
             .ToList()
             .ForEach(register);
 
@@ -60,7 +53,7 @@ class CommandList
         AddAlias("v", "version");
     }
 
-    public IEnumerable<ICommand> All => commands;
+    public IEnumerable<AbstractCommand> All => commands;
 
     public void AddAlias(string alias, string target)
     {
@@ -72,20 +65,58 @@ class CommandList
 /// <summary>
 /// Intefaz que representa un comando.
 /// </summary>
-interface ICommand
+public abstract class AbstractCommand : IExecutable
 {
+
     /// <summary>
     /// Nombre del comando a ejecutar.
     /// </summary>
-    string Name { get; }
+    public abstract string Name { get; }
+    public override string Section => Name.ToUpper();
     /// <summary>
     /// Descripción del comando.
     /// </summary>
-    string Description { get; }
+    public string Description { get; }
+}
+
+public abstract class IExecutable
+{
+    public abstract string Section { get; }
+    public string[] args;
+    public IExecutable()
+    {
+        args = [];
+    }
+
+    public virtual bool HasErrors()
+    {
+        return false;
+    }
+
     /// <summary>
     /// Función que se ejecuta al invocar el comando.
     /// </summary>
     /// <param name="ctx">Contexto necesario para operar</param>
     /// <param name="args">Valores pasado por comando</param>
-    void Execution(string[] args);
+    public abstract void Execution();
+
+    public void ExecuteCommand()
+    {
+        Ctx.Log.Section(Section);
+
+        if (HasErrors()) return;
+
+        Execution();
+    }
+
+    public void ExecuteCommand(string[] args)
+    {
+        this.args = args;
+
+        Ctx.Log.Section(Section);
+
+        if (HasErrors()) return;
+
+        Execution();
+    }
 }

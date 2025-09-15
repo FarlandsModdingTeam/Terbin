@@ -3,17 +3,22 @@ using System.Diagnostics;
 
 namespace Terbin.Commands;
 
-public class BuildCommand : ICommand
+public class BuildCommand : AbstractCommand
 {
-    public string Name => "build";
-    public string Description => "Generates plugin.cs from manifest and runs 'dotnet build'";
 
-    public void Execution(string[] args)
+    public override string Name => "build";
+    public string Description => "Generates plugin.cs from manifest and runs 'dotnet build'";
+    public override bool HasErrors()
+    {
+        //TODO: Put checkers here
+        return false;
+    }
+    public override void Execution()
     {
         Ctx.Log.Info("Build started...");
 
         // 1) Generate plugin.cs from manifest
-        new BuildManifest().Execution(Array.Empty<string>());
+        new BuildManifest().ExecuteCommand([]);
 
         // Ensure we have a manifest and corresponding project file
         if (Ctx.manifest == null)

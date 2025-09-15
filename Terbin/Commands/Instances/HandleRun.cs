@@ -2,9 +2,12 @@ using System.Diagnostics;
 
 namespace Terbin.Commands.Instances;
 
-internal class HandleRun
+internal class HandleRun : IExecutable
 {
-    public static void Run(string[] args)
+
+    public override string Section => "INSTANCE RUN";
+
+    public override void Execution()
     {
         if (args.Length < 1)
         {

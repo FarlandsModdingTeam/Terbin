@@ -8,9 +8,10 @@ using Index = Terbin.Data.Index;
 namespace Terbin.Commands;
 
 
-public class InstancesCommand : ICommand
+public class InstancesCommand : AbstractCommand
 {
-    public string Name => "instances";
+
+    public override string Name => "instances";
     public string Description => "Manage game instances: create, list, run";
 
     /// <summary>
@@ -24,34 +25,37 @@ public class InstancesCommand : ICommand
         return Uri.TryCreate(e_url_s, UriKind.Absolute, out Uri uriResult)
             && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
     }
-
-    public void Execution(string[] args)
+    public override bool HasErrors()
     {
-        if (Checkers.IsConfigUnloaded()) return;
+        if (Checkers.IsConfigNull()) return true;
 
-        if (Checkers.IsArgumentsEmpty(args)) return;
+        if (Checkers.IsArgumentsEmpty(args)) return true;
 
+        return false;
+    }
+    public override void Execution()
+    {
         var sub = args[0].ToLowerInvariant();
         args = args.Skip(1).ToArray();
         switch (sub)
         {
             case "create":
-                HandleCreate.Create(args);
+                new HandleCreate().ExecuteCommand(args);
                 break;
             case "list":
-                HandleList.List(args);
+                new HandleList().ExecuteCommand(args);
                 break;
             case "run":
-                HandleRun.Run(args);
+                new HandleRun().ExecuteCommand(args);
                 break;
             case "open":
-                HandleOpen.Open(args);
+                new HandleOpen().ExecuteCommand(args);
                 break;
             case "delete":
-                HandleDelete.Delete(args);
+                new HandleDelete().ExecuteCommand(args);
                 break;
             case "add":
-                HandleAddMod.AddMod(args);
+                new HandleAddMod().ExecuteCommand(args);
                 break;
             default:
                 Ctx.Log.Error($"Unknown subcommand: {sub}");

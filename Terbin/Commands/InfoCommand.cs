@@ -5,14 +5,16 @@ namespace Terbin.Commands;
 
 // * Compatible con Pipe
 // * Checks comprobados
-public class InfoCommand : ICommand
+public class InfoCommand : AbstractCommand
 {
-    public string Name => "info";
+
+    public override string Name => "info";
 
     public string Description => "This command is used in order to get terbin's info";
-
-    public void Execution(string[] args)
+    
+    public override void Execution()
     {
+
         Ctx.Log.Section("Info");
         Ctx.Log.Info($"Version: undefined");
         Ctx.Log.Info($"Manifest path: {Ctx.manifestPath}");
@@ -28,6 +30,8 @@ public class InfoCommand : ICommand
 
         Ctx.PipeWrite(dto, StatusCode.OK, "ok");
     }
+
+
 
     public class InfoDTO
     {

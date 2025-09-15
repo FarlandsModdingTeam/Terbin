@@ -5,29 +5,30 @@ namespace Terbin.Commands.Instances;
 // * Compatible con Pipe
 // * Checks comprobados
 // ! Necesita refactorización
-internal class HandleDelete
+internal class HandleDelete : IExecutable
 {
-    public static void Delete(string[] args)
+
+    public override string Section => "INSTANCE DELETE";
+    public override bool HasErrors()
     {
+        if (Checkers.IsArgumentsEmpty(args)) return true;
+        var name = args.FirstOrDefault(a => !a.StartsWith("-")) ?? string.Empty;
 
-        if (Checkers.IsArgumentsEmpty(args)) return;
+        if (Checkers.IsNullOrWhiteSpace(name)) return true;
+        if (Checkers.IsConfigNull()) return true;
 
+        if(Checkers.NotExistInstance(name)) return true;
+
+        return false;
+    }
+
+    public override void Execution()
+    {
         bool autoYes = args.Any(a => string.Equals(a, "-y", StringComparison.OrdinalIgnoreCase) || string.Equals(a, "--yes", StringComparison.OrdinalIgnoreCase));
         // First non-flag argument is treated as the instance name
         var name = args.FirstOrDefault(a => !a.StartsWith("-")) ?? string.Empty;
-
-        if (Checkers.IsNullOrWhiteSpace(name)) return;
-
-
-        if (Checkers.IsConfigUnloaded()) return;
-
-        if (!Ctx.config.TryGetInstance(name, out var path))
-        {
-            Ctx.PipeWrite(null, StatusCode.BAD_REQUEST, $"Instance not found: {name}");
-
-            return;
-        }
-
+        var path = Ctx.config.GetInstancePath(name);
+        
         if (!autoYes)
         {
             //TODO pensar como funcionará esto

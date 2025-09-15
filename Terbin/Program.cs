@@ -7,7 +7,10 @@ using Terbin.Data;
 using Index = Terbin.Data.Index;
 
 // Carga contexto
-var dotTerbin = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".terbin");
+var dotTerbin = Path.Combine(
+    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+    ".terbin"
+);
 var configPath = Config.configPath;
 
 if (!Directory.Exists(dotTerbin))
@@ -19,7 +22,9 @@ if (!Directory.Exists(dotTerbin))
 Ctx.existManifest = File.Exists(ProjectManifest.ManifestPath);
 if (Ctx.existManifest)
 {
-    Ctx.manifest = JsonConvert.DeserializeObject<ProjectManifest>(File.ReadAllText(ProjectManifest.ManifestPath));
+    Ctx.manifest = JsonConvert.DeserializeObject<ProjectManifest>(
+        File.ReadAllText(ProjectManifest.ManifestPath)
+    );
 }
 
 // Carga configuración
@@ -29,12 +34,15 @@ if (File.Exists(configPath))
     Ctx.config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(configPath));
 }
 
-//TODO: Carga índice 
+//TODO: Carga índice
 Ctx.index = new();
 Ctx.index.Setup();
 
 var commands = new CommandList();
 commands.init();
+
+if (args.Length < 1)
+    return;
 
 if (args[0].Trim() == "--it")
 {
@@ -64,21 +72,21 @@ else if (args[0].Trim() == "--pipe")
                     Iteration(arguments);
                 }
             }
-            catch(IOException ex)
+            catch (IOException ex)
             {
                 Ctx.Log.Error("Error de comunicación: " + ex.Message);
             }
         }
-
     }
 }
-else Iteration(args);
+else
+    Iteration(args);
 
 void Iteration(string[] args)
 {
     if (args.Length < 1)
     {
-        commands["help"](Array.Empty<string>());
+        commands["help"].ExecuteCommand(args);
         return;
     }
 
@@ -93,5 +101,5 @@ void Iteration(string[] args)
         cmdToken = raw.Substring(1);
     }
 
-    commands[cmdToken](args.Skip(1).ToArray());
+    commands[cmdToken].ExecuteCommand(args.Skip(1).ToArray());
 }

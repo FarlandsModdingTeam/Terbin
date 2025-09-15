@@ -6,7 +6,7 @@
       "type": "coreclr",
       "request": "launch",
       "program": "${workspaceFolder}\\Terbin\\bin\\Debug\\net9.0\\Terbin.dll",
-      "args": ["-i", "add", "dadada", "UnityExplorer"],
+      "args": ["-i", "create", "TEST", "D:\\TerbinManager\\instances\\test"],
       "cwd": "${workspaceFolder}\\Terbin",
       "console": "integratedTerminal"
     }

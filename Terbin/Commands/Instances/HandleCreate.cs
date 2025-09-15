@@ -1,4 +1,3 @@
-
 using Newtonsoft.Json;
 using Terbin.Data;
 
@@ -7,24 +6,38 @@ namespace Terbin.Commands.Instances;
 // * Compatible con Pipe
 // * Checks comprobados
 // ! Necesita refactorización
-internal class HandleCreate
+internal class HandleCreate : IExecutable
 {
-    public static void Create(string[] args)
-    {
-        if (Checkers.HasNotEnoughArgs(args, 2)) return;
+    public override string Section => "INSTANCES CREATE";
 
+    public override bool HasErrors()
+    {
+        if (Checkers.HasNotEnoughArgs(args, 2))
+            return true;
         var name = args[0];
         var installPath = args[1];
 
-        if (Checkers.IsNullOrWhiteSpace(name, "Name must be provided")) return;
-        if (Checkers.IsNullOrWhiteSpace(installPath, "Path must be provided")) return;
+        if (Checkers.IsNullOrWhiteSpace(name, "Name must be provided"))
+            return true;
+        if (Checkers.IsNullOrWhiteSpace(installPath, "Path must be provided"))
+            return true;
+        var fpath = Ctx.config!.FarlandsPath;
 
+        if (Checkers.IsNullOrWhiteSpace(fpath, "Farlands path is not configured"))
+            return true;
+        if (Checkers.NotExistDirectory(fpath, "Farlands Path not exist"))
+            return true;
+
+        return false;
+    }
+
+    public override void Execution()
+    {
+        var name = args[0];
+        var installPath = args[1];
 
         // Require FarlandsPath to be set and exist
         var fpath = Ctx.config!.FarlandsPath;
-
-        if (Checkers.IsNullOrWhiteSpace(fpath, "Farlands path is not configured")) return;
-        if (Checkers.NotExistingDirectory(fpath, "Path not exist")) return;
 
         // Normalize paths
         fpath = Path.GetFullPath(fpath);
@@ -33,15 +46,25 @@ internal class HandleCreate
         if (string.Equals(fpath, dest, StringComparison.OrdinalIgnoreCase))
         {
             Ctx.Log.Error("Destination path cannot be the same as the Farlands source path.");
-            Ctx.PipeWrite(null, StatusCode.BAD_REQUEST, "Destination path cannot be the same as the Farlands source path.");
+            Ctx.PipeWrite(
+                null,
+                StatusCode.BAD_REQUEST,
+                "Destination path cannot be the same as the Farlands source path."
+            );
             return;
         }
 
         // Prevent nesting (dest inside src) which would cause infinite recursion
-        if (dest.StartsWith(fpath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+        if (
+            dest.StartsWith(fpath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
+        )
         {
             Ctx.Log.Error("Destination path cannot be inside the Farlands source path.");
-            Ctx.PipeWrite(null, StatusCode.BAD_REQUEST, "Destination path cannot be inside the Farlands source path.");
+            Ctx.PipeWrite(
+                null,
+                StatusCode.BAD_REQUEST,
+                "Destination path cannot be inside the Farlands source path."
+            );
 
             return;
         }
@@ -50,7 +73,11 @@ internal class HandleCreate
         if (Ctx.config.ExistInstanceInPath(dest))
         {
             Ctx.Log.Error($"There is already an instance registered at '{dest}'.");
-            Ctx.PipeWrite(null, StatusCode.BAD_REQUEST, $"There is already an instance registered at '{dest}'.");
+            Ctx.PipeWrite(
+                null,
+                StatusCode.BAD_REQUEST,
+                $"There is already an instance registered at '{dest}'."
+            );
             return;
         }
 
@@ -65,8 +92,14 @@ internal class HandleCreate
             var existingManifest = Path.Combine(dest, "manifest.json");
             if (File.Exists(existingManifest))
             {
-                Ctx.Log.Error($"Destination '{dest}' already contains an instance (manifest.json found).");
-                Ctx.PipeWrite(null, StatusCode.BAD_REQUEST, $"Destination '{dest}' already contains an instance (manifest.json found).");
+                Ctx.Log.Error(
+                    $"Destination '{dest}' already contains an instance (manifest.json found)."
+                );
+                Ctx.PipeWrite(
+                    null,
+                    StatusCode.BAD_REQUEST,
+                    $"Destination '{dest}' already contains an instance (manifest.json found)."
+                );
                 return;
             }
 
@@ -75,7 +108,10 @@ internal class HandleCreate
             if (hasAny)
             {
                 //TODO: Que hacer con esto?
-                var ok = Ctx.Log.Confirm($"Destination '{dest}' is not empty. Merge and overwrite files?", defaultNo: false);
+                var ok = Ctx.Log.Confirm(
+                    $"Destination '{dest}' is not empty. Merge and overwrite files?",
+                    defaultNo: false
+                );
                 if (!ok)
                 {
                     Ctx.Log.Warn("Aborted by user.");
@@ -88,21 +124,30 @@ internal class HandleCreate
         {
             Ctx.Log.Info($"Cloning from '{fpath}' to '{dest}'...");
             // Progress bar during clone
-            FileOps.CopyDirectoryWithProgress(fpath, dest, overwrite: true, (current, total) =>
-            {
-                ProgressUtil.DrawProgressBar(current, total);
-            });
+            FileOps.CopyDirectoryWithProgress(
+                fpath,
+                dest,
+                overwrite: true,
+                (current, total) =>
+                {
+                    ProgressUtil.DrawProgressBar(current, total);
+                }
+            );
             // Ensure we end the progress line
             Console.WriteLine();
             Ctx.Log.Success("Clone completed.");
 
             // Install BepInEx
-            HandleAddMod.InstallBepInEx(dest);
+            InstallBepInEx(dest);
         }
         catch (Exception ex)
         {
             Ctx.Log.Error($"Failed to clone files: {ex.Message}");
-            Ctx.PipeWrite(null, StatusCode.INTERNAL_SERVER_ERROR, $"Failed to clone files: {ex.Message}");
+            Ctx.PipeWrite(
+                null,
+                StatusCode.INTERNAL_SERVER_ERROR,
+                $"Failed to clone files: {ex.Message}"
+            );
             return;
         }
 
@@ -128,6 +173,58 @@ internal class HandleCreate
         Ctx.PipeWrite(null, StatusCode.OK, $"ok");
     }
 
+    public void InstallBepInEx(string dest)
+    {
+        const string url =
+            "https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.3/BepInEx_win_x64_5.4.23.3.zip";
+
+        var bepinFolder = Path.Combine(dest, "BepInEx");
+        var doorstopCfg = Path.Combine(dest, "doorstop_config.ini");
+        var winhttp = Path.Combine(dest, "winhttp.dll");
+
+        bool exists =
+            Directory.Exists(bepinFolder) || File.Exists(doorstopCfg) || File.Exists(winhttp);
+        if (exists)
+        {
+            var overwrite = Ctx.Log.Confirm(
+                "BepInEx appears to be installed. Reinstall/overwrite?",
+                defaultNo: false
+            );
+            if (!overwrite)
+            {
+                Ctx.Log.Info("Skipping BepInEx installation.");
+                return;
+            }
+        }
+
+        string tmpZip = Path.Combine(Path.GetTempPath(), $"bepinex_{Guid.NewGuid():N}.zip");
+        try
+        {
+            Ctx.Log.Info("Downloading BepInEx...");
+            NetUtil.DownloadFileWithProgress(url, tmpZip);
+            Console.WriteLine();
+
+            Ctx.Log.Info("Extracting BepInEx...");
+            System.IO.Compression.ZipFile.ExtractToDirectory(tmpZip, dest, overwriteFiles: true);
+            Ctx.Log.Success("BepInEx installed.");
+        }
+        catch (Exception ex)
+        {
+            Ctx.Log.Error($"Failed to install BepInEx: {ex.Message}");
+        }
+        finally
+        {
+            try
+            {
+                if (File.Exists(tmpZip))
+                    File.Delete(tmpZip);
+            }
+            catch
+            { /* ignore */
+            }
+        }
+    }
+
     /// <summary>
     /// Genera el manifest.json de la instancia.<br />
     /// sobre escribe todo aquel que exista y pone valores predeterminados:<br />
@@ -144,7 +241,7 @@ internal class HandleCreate
         {
             Name = name,
             Version = "1.0.0",
-            Mods = new List<string>()
+            Mods = new List<string>(),
         };
         var json = JsonConvert.SerializeObject(instanceManifest, Formatting.Indented);
         File.WriteAllText(manifestPath, json);

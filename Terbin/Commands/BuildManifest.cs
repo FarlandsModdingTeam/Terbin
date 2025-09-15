@@ -6,13 +6,18 @@ using Terbin.Data;
 
 namespace Terbin.Commands;
 
-class BuildManifest : ICommand
+class BuildManifest : AbstractCommand
 {
-    public string Name => "bman";
+
+    public override string Name => "bman";
 
     public string Description => "This command creates the plugin file based on manifest file";
-
-    public void Execution(string[] args)
+    public override bool HasErrors()
+    {
+        //TODO: Put checkers here
+        return false;
+    }
+    public override void Execution()
     {
         Ctx.Log.Info("Generating plugin file...");
 
@@ -36,7 +41,7 @@ class BuildManifest : ICommand
 
         if (Ctx.manifest.Type == ProjectManifest.ManifestType.EMPTY)
         {
-            executeEmpty( Ctx.manifest);
+            executeEmpty(Ctx.manifest);
             return;
         }
 
@@ -171,7 +176,7 @@ class BuildManifest : ICommand
         {
             File.WriteAllText(outputPath, plugin);
 
-            if(!File.Exists(modPath)) File.WriteAllText(modPath, mod);
+            if (!File.Exists(modPath)) File.WriteAllText(modPath, mod);
 
             Ctx.Log.Success($"Plugin generated successfully at: {outputPath}");
         }

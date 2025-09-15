@@ -4,32 +4,30 @@ using Terbin.Dialogs;
 
 namespace Terbin.Commands;
 
-class ManifestCommand : ICommand
+class ManifestCommand : AbstractCommand
 {
-    public string Name => "manifest";
+
+    public override string Name => "manifest";
 
     public string Description => "Check if there is a manifest file";
-
-    public void Execution(string[] args)
+    public override bool HasErrors()
     {
-    // No heavy section needed here
+        if (Checkers.ExistFile(Ctx.manifestPath)) return true;
 
-        if (File.Exists(Ctx.manifestPath))
+        return false;
+    }
+    public override void Execution()
+    {
+        // No heavy section needed here
+
+        var autoYes = args.Any(a => string.Equals(a, "-y", StringComparison.OrdinalIgnoreCase) || string.Equals(a, "--yes", StringComparison.OrdinalIgnoreCase));
+        if (autoYes || Ctx.Log.Confirm("Do you want to generate a new one?"))
         {
-            Ctx.Log.Info("A manifest file already exists in the project.");
+            new ManifestDialog().run(args);
         }
         else
         {
-            Ctx.Log.Warn("No manifest file exists.");
-            var autoYes = args.Any(a => string.Equals(a, "-y", StringComparison.OrdinalIgnoreCase) || string.Equals(a, "--yes", StringComparison.OrdinalIgnoreCase));
-            if (autoYes || Ctx.Log.Confirm("Do you want to generate a new one?"))
-            {
-                new ManifestDialog().run(args);
-            }
-            else
-            {
-                Ctx.Log.Info("Operation cancelled. No manifest was generated.");
-            }
+            Ctx.Log.Info("Operation cancelled. No manifest was generated.");
         }
     }
 }

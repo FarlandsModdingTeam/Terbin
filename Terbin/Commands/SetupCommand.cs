@@ -6,28 +6,21 @@ using Terbin.Data;
 
 namespace Terbin.Commands;
 
-public class SetupCommand : ICommand
+public class SetupCommand : AbstractCommand
 {
-    public string Name => "setup";
+    public override string Name => "setup";
     public string Description => "Runs all main steps to prepare the mod";
-
-    public void Execution(string[] args)
+    public override bool HasErrors()
     {
-        // Pass-through flags (e.g., -y/--yes) to sub-commands/dialogs
-        Ctx.Log.Section("Setup: full mod preparation");
-
+        return false;
+    }
+    public override void Execution()
+    {
         // 1. FarlandsPath configuration
-        if (Ctx.config == null || string.IsNullOrWhiteSpace(Ctx.config.FarlandsPath))
+        if (Checkers.IsConfigNull() || Checkers.IsNullOrWhiteSpace(Ctx.config.FarlandsPath))
         {
             Ctx.Log.Info("Step: config fpath");
-            new ConfigCommand().Execution(new[] { "fpath" });
-            // Reload config from disk to ensure the latest values are in context
-            if (Ctx.config != null && File.Exists(Config.configPath))
-            {
-                var cfgJson = File.ReadAllText(Config.configPath);
-                var reloaded = JsonConvert.DeserializeObject<Terbin.Config>(cfgJson);
-                if (reloaded != null) Ctx.config = reloaded;
-            }
+            new ConfigCommand().ExecuteCommand(["fpath"]);
         }
         else
         {
@@ -39,7 +32,7 @@ public class SetupCommand : ICommand
         List<string> manifestArgs = ["-y"];
         if (args.Contains("empty")) manifestArgs.Add("-x");
 
-        new ManifestCommand().Execution(manifestArgs.ToArray());
+        new ManifestCommand().ExecuteCommand(manifestArgs.ToArray());
         // Reload manifest into context in case it was just created
         if (!string.IsNullOrWhiteSpace(Ctx.manifestPath))
         {
@@ -53,16 +46,16 @@ public class SetupCommand : ICommand
 
         // 3. Gen
         Ctx.Log.Info("Step: gen");
-        new GenerateProject().Execution([]);
+        new GenerateProject().ExecuteCommand([]);
 
         // 4. Inf
         Ctx.Log.Info("Step: inf");
-        new InsertFarlandsCommand().Execution(Array.Empty<string>());
+        new InsertFarlandsCommand().ExecuteCommand([]);
 
         // 5. Bman
         Ctx.Log.Info("Step: bman");
 
-        new BuildManifest().Execution([]);
+        new BuildManifest().ExecuteCommand([]);
 
         Ctx.Log.Success("Setup complete. Mod ready!");
     }

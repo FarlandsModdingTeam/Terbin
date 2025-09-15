@@ -2,15 +2,18 @@ using System;
 
 namespace Terbin.Commands;
 
-public class IndexCommand : ICommand
+public class IndexCommand : AbstractCommand
 {
-    public string Name => "index";
+    public override string Name => "index";
 
     public string Description => "Manage index";
-
-    public void Execution(string[] args)
+    public override bool HasErrors()
     {
         //TODO: Agregar checks
+        return false;
+    }
+    public override void Execution()
+    {
         var sub = args[0];
         args = args.Skip(1).ToArray();
 

@@ -2,29 +2,28 @@ using System.Diagnostics;
 
 namespace Terbin.Commands;
 
-class GenerateProject : ICommand
+//? Debería poder reconstruir el .csproj? 
+class GenerateProject : AbstractCommand
 {
-    public string Name => "gen";
+
+    public override string Name => "gen";
 
     public string Description => "This command is used to generate a new project";
+    public override bool HasErrors()
+    {
+        if (Checkers.IsManifestNull()) return true;
 
-    public void Execution(string[] args)
+        var projectPath = Path.Combine(Environment.CurrentDirectory, $"{Ctx.manifest.Name}.csproj");
+        if (Checkers.ExistFile(projectPath)) return true;
+
+        return false;
+    }
+    public override void Execution()
     {
         // lightweight log; section header not needed
         Ctx.Log.Info("Generating project...");
 
-        if (Ctx.manifest == null)
-        {
-            Ctx.Log.Error("No manifest loaded. Create one with 'manifest' before generating a project.");
-            return;
-        }
-
         var projectPath = Path.Combine(Environment.CurrentDirectory, $"{Ctx.manifest.Name}.csproj");
-        if (File.Exists(projectPath))
-        {
-            Ctx.Log.Warn($"A project already exists: {Ctx.manifest.Name}.csproj");
-            return;
-        }
 
         var modVersion = (Ctx.manifest.Versions != null && Ctx.manifest.Versions.Count > 0)
             ? Ctx.manifest.Versions[^1]
