@@ -13,12 +13,12 @@ public class ProjectManifest
         EMPTY
     }
 
-    private string name = "";
-    private ManifestType type = ManifestType.NORMAL;
-    private string guid = "";
-    private List<string> versions = [];
-    private string url = "";
-    private List<string> dependencies = [];
+    [JsonProperty("Name")] private string name = "";
+    [JsonProperty("Type")] private ManifestType type = ManifestType.NORMAL;
+    [JsonProperty("GUID")] private string guid = "";
+    [JsonProperty("Versions")] private List<string> versions = [];
+    [JsonProperty] private string url = "";
+    [JsonProperty("Dependencies")] private List<string> dependencies = [];
 
     [JsonIgnore] public string Name { get => name; set { name = value; Save(); } }
 
