@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 using Terbin.Data;
@@ -6,6 +6,9 @@ using Index = Terbin.Data.Index;
 
 namespace Terbin;
 
+/// <summary>
+/// Context
+/// </summary>
 public static class Ctx
 {
     public static bool existManifest;

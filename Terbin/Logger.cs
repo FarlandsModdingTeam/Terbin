@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace Terbin;
 
@@ -44,6 +44,8 @@ public class Logger
         _ => "[LOG ]"
     };
 
+
+    // TODO: Ser una tuberia que avise del error.
     public void Log(LogLevel level, string message)
     {
         lock (_lock)

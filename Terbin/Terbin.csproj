@@ -15,5 +15,10 @@
   <ItemGroup>
     <Content Include="terbin.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Commands\Configuration\" />
+    <Folder Include="Commands\Game\" />
+    <Folder Include="Commands\Projects\" />
+  </ItemGroup>
 
 </Project>
